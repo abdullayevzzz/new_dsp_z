@@ -1,4 +1,4 @@
-refRes = complex(9985.0, 0.0) #reference resistor OHM
+refRes = complex(1000.0, 0.0) #reference resistor OHM
 import serial
 import keyboard
 import cmath
@@ -130,10 +130,11 @@ while not keyboard.is_pressed("s"):
             accumB1Q = int.from_bytes(buffer[10:12], byteorder='little', signed = "True")
             accumA1 = complex (accumA1I,accumA1Q) 
             accumB1 = complex (accumB1I,accumB1Q)
-            if (accumA1 == accumB1):
+            #if (accumA1 == accumB1):
+            if (accumA1 == 0):
                 accumA1 = accumA1+1
-            Z1 = accumB1*refRes/(accumA1-accumB1)
-            #magZ1 = abs(accumB1)*refRes/(abs(accumA1)-abs(accumB1))
+            #Z1 = accumB1*refRes/(accumA1-accumB1)
+            Z1 = accumB1*refRes/accumA1
             magZ1 = abs(Z1)
             phZ1 = cmath.phase(Z1)
             
@@ -163,7 +164,8 @@ while not keyboard.is_pressed("s"):
             ratioImag = struct.unpack('<f', buffer[8:12])
             
             ratio = complex(ratioReal[0],ratioImag[0])
-            Z1 = refRes/(ratio-1)
+            #Z1 = refRes/(ratio-1)
+            Z1 = refRes/ratio
             magZ1 = abs(Z1)
             phZ1 = cmath.phase(Z1)
             
