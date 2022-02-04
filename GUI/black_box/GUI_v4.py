@@ -101,7 +101,7 @@ ECG_aver = [0] * (fulLen//5)
 mags = [0] * fulLen
 mags_aver = [0] * (fulLen//5)
 j = 0
-k = fulLen//5 - 1
+k = 0
 
 freq = 1 #(10^freq-1)kHz default frequency
 ser.write(b'1')
@@ -114,9 +114,9 @@ mode = 'e' #default mode
 ser.write(b'e')
 ser.read(1400)
 
-header1 = ['Magnitude of Z', 'Phase of Z', 'Real of Z', 'Imaginary of Z', 'Real Excit', 'Imag Excit', 'Real Resp', 'Imag Resp']
+header1 = ['ICG', 'ECG']
 
-header2 = ['Magnitude of Z', 'Phase of Z', 'Real of Z', 'Imaginary of Z', 'Ratio Real', 'Ratio Imag']
+header2 = ['ICG', 'ECG']
 
 if mode == 'd':
     print(header1)
@@ -153,19 +153,21 @@ while not keyboard.is_pressed("s"):
                 DC = sum(mags)/len(mags)
                 if (AC_flag):
                     mags_aver[k] = mags_aver[k] - DC
-                k = k - 1
+                k = k + 1
+                data2 = ["%.4f" % mags_aver[k],"%.4f" % ECG_aver[k]]
+                writer.writerow(data2)
             j = j+1
             if (j==fulLen):
                 j = 0
-                k = fulLen//5 - 1
+                k = 0
                 
-            data = (str("%.4f" % magZ1) + ', ' + str("%.4f" % phZ1) + ', ' + str("%.4f" % Z1.real) + \
-            ', ' + str("%.4f" % Z1.imag) + ', ' + str(accumA1I) + ', ' + str(accumA1Q) + ', ' + str(accumB1I) + \
-            ', ' + str(accumB1Q)) # print row
+            #data = (str("%.4f" % magZ1) + ', ' + str("%.4f" % phZ1) + ', ' + str("%.4f" % Z1.real) + \
+            #', ' + str("%.4f" % Z1.imag) + ', ' + str(accumA1I) + ', ' + str(accumA1Q) + ', ' + str(accumB1I) + \
+            #', ' + str(accumB1Q)) # print row
             #print (data)
-            data2 = ["%.4f" % magZ1,"%.4f" % phZ1,"%.4f" % Z1.real,"%.4f" % Z1.imag,accumA1I,accumA1Q,accumB1I,accumB1Q]
-            writer.writerow(data2)
-            print (accumC)
+            #print (accumC)
+            #data2 = ["%.4f" % magZ1,"%.4f" % phZ1,"%.4f" % Z1.real,"%.4f" % Z1.imag,accumA1I,accumA1Q,accumB1I,accumB1Q]
+            #writer.writerow(data2)
             
         elif mode == 'e':
             packet_number = int.from_bytes(buffer[2:4], byteorder='little')
@@ -188,18 +190,20 @@ while not keyboard.is_pressed("s"):
                 DC = sum(mags)/len(mags)
                 if (AC_flag):
                     mags_aver[k] = mags_aver[k] - DC
-                k = k - 1
+                k = k + 1
+                data4 = ["%.4f" % mags_aver[k],"%.4f" % ECG_aver[k]]
+                writer.writerow(data4)
             j = j+1
             if (j==fulLen):
                 j = 0
-                k = fulLen//5 - 1
+                k = 0
             
-            data3 = (str("%.4f" % magZ1) + ', ' + str("%.4f" % phZ1) + ', ' + str("%.4f" % Z1.real) + \
-            ', ' + str("%.4f" % Z1.imag) + ', ' + str("%.8f" % ratioReal[0]) + ', ' + str("%.8f" % ratioImag[0]))
+            #data3 = (str("%.4f" % magZ1) + ', ' + str("%.4f" % phZ1) + ', ' + str("%.4f" % Z1.real) + \
+            #', ' + str("%.4f" % Z1.imag) + ', ' + str("%.8f" % ratioReal[0]) + ', ' + str("%.8f" % ratioImag[0]))
             #print (data3)
-            print (accumC)
-            data4 = ["%.4f" % magZ1, "%.4f" % phZ1, "%.4f" % Z1.real, "%.4f" % Z1.imag, "%.8f" % ratioReal[0], "%.8f" % ratioImag[0]]
-            writer.writerow(data4)
+            #print (accumC)
+            #data4 = ["%.4f" % magZ1, "%.4f" % phZ1, "%.4f" % Z1.real, "%.4f" % Z1.imag, "%.8f" % ratioReal[0], "%.8f" % ratioImag[0]]
+            #writer.writerow(data4)
             
         if ((keyboard.is_pressed("d") or mode_button == 'd') and mode == 'e'):
             print ("d from if")
