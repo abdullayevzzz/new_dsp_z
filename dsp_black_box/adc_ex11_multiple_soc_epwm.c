@@ -295,7 +295,6 @@ void main(void)
             accumA1Q = _dmac(signal1cos,adcAResults,BUFLEN/20-1,0);
             accumB1I = _dmac(signal1sin,adcBResults,BUFLEN/20-1,0);
             accumB1Q = _dmac(signal1cos,adcBResults,BUFLEN/20-1,0);
-            accumC = _dmac(signalDC,adcCResults,BUFLEN/20-1,0);
             halfFilled = 0;
         }
 
@@ -305,7 +304,7 @@ void main(void)
             accumA1Q += _dmac(signal1cos+BUFLEN/2,adcAResults+BUFLEN/2,BUFLEN/20-1,0);
             accumB1I += _dmac(signal1sin+BUFLEN/2,adcBResults+BUFLEN/2,BUFLEN/20-1,0);
             accumB1Q += _dmac(signal1cos+BUFLEN/2,adcBResults+BUFLEN/2,BUFLEN/20-1,0);
-            accumC += _dmac(signalDC+BUFLEN/2,adcCResults+BUFLEN/2,BUFLEN/20-1,0);
+            accumC = adcCResults[BUFLEN/2];
         }
 
         if (fullFilled == 1) {
