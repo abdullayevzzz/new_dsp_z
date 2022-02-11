@@ -64,8 +64,8 @@ void pack (uint8_t* data, uint16_t *packetNumber, int32_t  *accumA1I, int32_t  *
         data[11] = (*dRatioImag >> 24) & 0xFF;
     }
 
-    data[12] = (*accumC) & 0xFF; //ECG data
-    data[13] = (*accumC >> 8) & 0xFF;
+    data[12] = (*accumC >> 16) & 0xFF; //ECG data
+    data[13] = (*accumC >> 24) & 0xFF;
 
     // eliminate sync. problem
     /*int i;

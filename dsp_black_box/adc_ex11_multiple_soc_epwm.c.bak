@@ -327,7 +327,7 @@ void main(void)
 
         //  SCI_writeCharArray(SCIA_BASE, data, 12); //replace with non-blocking code
         int j;
-        for (j=0; j<14; j++){
+        for (j=0; j<16; j++){
             HWREGH(SCIA_BASE + SCI_O_TXBUF) = data[j];
         }
 
