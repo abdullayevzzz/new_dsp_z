@@ -159,10 +159,10 @@ while not keyboard.is_pressed("s"):
                     diffmags_aver[k] = mags_aver[k] - mags_aver[k-1]
                 DC = sum(mags)/len(mags)
                 if (AC_flag):
-                    mags_aver[k] = mags_aver[k] - DC
-                k = k + 1
+                    mags_aver[k] = mags_aver[k] - DC                
                 data2 = ["%.4f" % mags_aver[k],"%.4f" % ECG_aver[k]]
                 writer.writerow(data2)
+                k = k + 1
             j = j+1
             if (j==fulLen):
                 j = 0
@@ -199,17 +199,19 @@ while not keyboard.is_pressed("s"):
                     diffmags_aver[k] = mags_aver[k] - mags_aver[k-1]
                 DC = sum(mags)/len(mags)
                 if (AC_flag):
-                    mags_aver[k] = mags_aver[k] - DC
-                k = k + 1
+                    mags_aver[k] = mags_aver[k] - DC                
                 #k = k - 1
-                print(ECG_aver[k])
+                #print(ECG_aver[k])
                 data4 = ["%.4f" % mags_aver[k],"%.4f" % ECG_aver[k]]
                 writer.writerow(data4)
+                k = k + 1
             j = j+1
-            if (k==fulLen/5-1):
-                 k = 0
+            #if (k==fulLen/5-1):
+            #     k = 0
             if (j==fulLen):
                 j = 0
+                k = 0
+                #print (ECG_aver[k])
 
                 
             

@@ -146,8 +146,8 @@ void main(void)
     //--- Configure GPIO24 as output (connected to ECG LOD+)
     GPIO_setPadConfig(24, GPIO_PIN_TYPE_PULLUP);     // Enable pull-up on GPIO5
     GPIO_setPinConfig(GPIO_24_GPIO24);               // GPIO34 = GPIO5
-    GPIO_setDirectionMode(24, GPIO_DIR_MODE_OUT);    // GPIO5 = output
-    GPIO_writePin(24, 0);
+    GPIO_setDirectionMode(24, GPIO_DIR_MODE_IN);    // GPIO5 = output
+    //GPIO_writePin(24, 0);
 
 
     //--- Configure GPIO34 as output (connected to LED)
