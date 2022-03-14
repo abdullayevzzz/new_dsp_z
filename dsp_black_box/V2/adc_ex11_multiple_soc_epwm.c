@@ -44,7 +44,7 @@ void sigGen (int16_t signal[], int f, int len, char s); // f in kHz, s = 's' for
 //void cosGen (int16_t signal[], int f, int len, int Fs);
 //void sinGenX (int16_t signal[], int len, int A, int P);
 //extern void pack [char data[], int32_t  accumA1I[], int32_t  accumA1Q[], int32_t  accumB1I[], int32_t  accumB1Q[]];
-void pack (uint8_t* data, volatile uint16_t *packetNumber, int32_t  *accumA1I, int32_t  *accumA1Q, int32_t  *accumB1I, int32_t  *accumB1Q, int32_t *accumC,  char *mode);
+void pack (uint8_t* data, volatile uint16_t *packetNumber, int32_t  *accumA1I, int32_t  *accumA1Q, int32_t  *accumB1I, int32_t  *accumB1Q, uint32_t *accumC,  char *mode);
 extern int32_t _dmac (int16_t *x1, int16_t *x2, int16_t count1, int16_t
 rsltBitShift);
 //#include "board.h"// ? from chopper example 'init_board()
@@ -287,7 +287,7 @@ void main(void)
         static int32_t  accumA1Q = 0; //accumulate excitation signal 1 quadrature component
         static int32_t  accumB1I = 0; //accumulate response signal 1 in phase component
         static int32_t  accumB1Q = 0; //accumulate response signal 1 quadrature component
-        static int32_t  accumC = 0;  //accumulate ECG data
+        static uint32_t  accumC = 0;  //accumulate ECG data
 
         if (halfFilled == 1) //wait until half buffer to fill
         {
@@ -305,7 +305,7 @@ void main(void)
             accumA1Q += _dmac(signal1cos+BUFLEN/2,adcAResults+BUFLEN/2,BUFLEN/20-1,0);
             accumB1I += _dmac(signal1sin+BUFLEN/2,adcBResults+BUFLEN/2,BUFLEN/20-1,0);
             accumB1Q += _dmac(signal1cos+BUFLEN/2,adcBResults+BUFLEN/2,BUFLEN/20-1,0);
-            accumC = adcCResult>>9;
+            accumC = adcCResult>>9; //sum of 500 samples - divided by 512
         }
 
         if (fullFilled == 1) {

@@ -6,7 +6,7 @@
  */
 #include "device.h"
 
-void pack (uint8_t* data, uint16_t *packetNumber, int32_t  *accumA1I, int32_t  *accumA1Q, int32_t  *accumB1I, int32_t  *accumB1Q,  int32_t  *accumC, char *mode) {
+void pack (uint8_t* data, uint16_t *packetNumber, int32_t  *accumA1I, int32_t  *accumA1Q, int32_t  *accumB1I, int32_t  *accumB1Q,  uint32_t  *accumC, char *mode) {
 
     data[0] = 0x7F;  //synchronization
     data[1] = 0xFF;
