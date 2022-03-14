@@ -17,6 +17,14 @@ p=pyaudio.PyAudio() # start the PyAudio class
 stream=p.open(format=pyaudio.paInt16,channels=1,rate=RATE,input=True,
               frames_per_buffer=CHUNK) #uses default input device
               
+#Design notch filters
+fs = 44100.0  # Sample frequency (Hz)
+f1 = 50.0  # Frequency to be removed from signal (Hz)
+f2 = 100.0  # Frequency to be removed from signal (Hz)
+Q = 30.0  # Quality factor
+b50, a50 = signal.iirnotch(f1, Q, fs)
+b100, a100 = signal.iirnotch(f2, Q, fs)
+              
 def filters(labels):
     global filter_50_mode
     global filter_100_mode    
@@ -24,25 +32,7 @@ def filters(labels):
         filter_50_mode = ~filter_50_mode
     if (labels == '100Hz'):
         filter_100_mode = ~filter_100_mode
-              
-def filter_50(sig):
-    fs = 44100.0  # Sample frequency (Hz)
-    f0 = 50.0  # Frequency to be removed from signal (Hz)
-    Q = 30.0  # Quality factor
-    # Design notch filter
-    b, a = signal.iirnotch(f0, Q, fs)
-    sig = signal.filtfilt(b, a, sig)
-    return(sig)
-    
-def filter_100(sig):
-    fs = 44100.0  # Sample frequency (Hz)
-    f0 = 100.0  # Frequency to be removed from signal (Hz)
-    Q = 30.0  # Quality factor
-    # Design notch filter
-    b, a = signal.iirnotch(f0, Q, fs)
-    sig = signal.filtfilt(b, a, sig)
-    return(sig)
-    
+                 
 plt.figure(figsize=(8,6), dpi=100)
 axA = plt.axes([0.1, 0.40, 0.8, 0.55])
 axA.plot(1)
@@ -56,9 +46,9 @@ b1.on_clicked(filters)
 while True: #to it a few times just to see
     data = np.frombuffer(stream.read(CHUNK),dtype=np.int16)
     if (filter_50_mode):
-        data = filter_50(data) #50Hz remove
+        data = signal.filtfilt(b50, a50, data) #50Hz remove
     if (filter_100_mode):
-        data = filter_100(data) #100Hz remove
+        data = signal.filtfilt(b100, a100, data) #100Hz remove
     data = data * np.hanning(len(data)) # smooth the FFT by windowing data
     fft = abs(np.fft.fft(data).real)
     fft = abs(np.fft.fft(data))
