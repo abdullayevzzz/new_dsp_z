@@ -64,12 +64,12 @@ rsltBitShift);
 
 uint16_t adcAResult;
 uint16_t adcBResult;
-uint16_t adcCResult;
+uint32_t adcCResult = 0;
 
 
 int16_t adcAResults[BUFLEN] = {0};
 int16_t adcBResults[BUFLEN] = {0};
-int16_t adcCResults[BUFLEN] = {0};
+//int16_t adcCResults[BUFLEN] = {0};
 
 
 volatile uint8_t halfFilled = 0;  //flags to check if read buffers are full
@@ -136,18 +136,6 @@ void main(void)
     GPIO_setDirectionMode(DEVICE_GPIO_PIN_SCITXDA, GPIO_DIR_MODE_OUT);
     GPIO_setPadConfig(DEVICE_GPIO_PIN_SCITXDA, GPIO_PIN_TYPE_STD);
     GPIO_setQualificationMode(DEVICE_GPIO_PIN_SCITXDA, GPIO_QUAL_ASYNC);
-
-    //--- Configure GPIO5 as output (connected to ECG shutdown)
-    GPIO_setPadConfig(5, GPIO_PIN_TYPE_PULLUP);     // Enable pull-up on GPIO5
-    GPIO_setPinConfig(GPIO_5_GPIO5);               // GPIO34 = GPIO5
-    GPIO_setDirectionMode(5, GPIO_DIR_MODE_OUT);    // GPIO5 = output
-    GPIO_writePin(5, 1);                            // Load output latch
-
-    //--- Configure GPIO24 as output (connected to ECG LOD+)
-    GPIO_setPadConfig(24, GPIO_PIN_TYPE_PULLUP);     // Enable pull-up on GPIO5
-    GPIO_setPinConfig(GPIO_24_GPIO24);               // GPIO34 = GPIO5
-    GPIO_setDirectionMode(24, GPIO_DIR_MODE_OUT);    // GPIO5 = output
-    GPIO_writePin(24, 0);
 
 
     //--- Configure GPIO34 as output (connected to LED)
@@ -267,7 +255,7 @@ void main(void)
     //
     configureADC(ADCA_BASE);
     configureADC(ADCB_BASE);
-    configureADC(ADCC_BASE);
+    //configureADC(ADCC_BASE);
 
     //   initEPWM_PWM(); //OM
     //  initPWMchopper ();
@@ -307,7 +295,7 @@ void main(void)
             accumA1Q = _dmac(signal1cos,adcAResults,BUFLEN/20-1,0);
             accumB1I = _dmac(signal1sin,adcBResults,BUFLEN/20-1,0);
             accumB1Q = _dmac(signal1cos,adcBResults,BUFLEN/20-1,0);
-            //accumC = adcCResults[BUFLEN/2];
+            //accumC = _dmac(signalDC,adcCResults,BUFLEN/20-1,0);
             halfFilled = 0;
         }
 
@@ -317,7 +305,7 @@ void main(void)
             accumA1Q += _dmac(signal1cos+BUFLEN/2,adcAResults+BUFLEN/2,BUFLEN/20-1,0);
             accumB1I += _dmac(signal1sin+BUFLEN/2,adcBResults+BUFLEN/2,BUFLEN/20-1,0);
             accumB1Q += _dmac(signal1cos+BUFLEN/2,adcBResults+BUFLEN/2,BUFLEN/20-1,0);
-            accumC = adcCResults[BUFLEN/2];
+            accumC = adcCResult>>9;
         }
 
         if (fullFilled == 1) {
@@ -482,7 +470,7 @@ __interrupt void adcA1ISR(void)
 
     adcAResult = ADC_readResult(ADCARESULT_BASE, ADC_SOC_NUMBER2);
     adcBResult = ADC_readResult(ADCBRESULT_BASE, ADC_SOC_NUMBER2);
-    adcCResult = ADC_readResult(ADCCRESULT_BASE, ADC_SOC_NUMBER2);
+    adcCResult += ADC_readResult(ADCCRESULT_BASE, ADC_SOC_NUMBER2);
 
     //
     // Clear the interrupt flag
@@ -507,7 +495,7 @@ __interrupt void adcA1ISR(void)
    if (PCB==1){
        adcAResults[counter]=(adcAResult>>1); //
        adcBResults[counter]=(adcBResult>>1); //
-       adcCResults[counter]=(adcCResult>>1); //
+       //adcCResults[counter]=(adcCResult>>1); //
        counter++;
    }
 
@@ -520,6 +508,7 @@ __interrupt void adcA1ISR(void)
         fullFilled = 1;
         counter = 0;
         packetNumber++;
+        adcCResult = 0;
     }
 
     //GPIO_writePin(125, dacOut);
