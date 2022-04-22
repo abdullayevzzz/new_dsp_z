@@ -127,6 +127,12 @@ void main(void)
     GPIO_setQualificationMode(DEVICE_GPIO_PIN_SCITXDA, GPIO_QUAL_ASYNC);
 
 
+    //--- Configure GPIO1 as output (connected to VEN)
+    GPIO_setPadConfig(1, GPIO_PIN_TYPE_PULLUP);     // Enable pull-up on GPIO34
+    GPIO_setPinConfig(GPIO_1_GPIO1);               // GPIO34 = GPIO34
+    GPIO_setDirectionMode(1, GPIO_DIR_MODE_OUT);    // GPIO34 = output
+    GPIO_writePin(1, 1);                            // Load output latch    
+
     //--- Configure GPIO34 as output (connected to LED)
     GPIO_setPadConfig(34, GPIO_PIN_TYPE_PULLUP);     // Enable pull-up on GPIO34
     GPIO_setPinConfig(GPIO_34_GPIO34);               // GPIO34 = GPIO34
