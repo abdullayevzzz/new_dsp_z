@@ -1,0 +1,59 @@
+################################################################################
+# Automatically-generated file. Do not edit!
+################################################################################
+
+SHELL = cmd.exe
+
+# Add inputs and outputs from these tool invocations to the build variables 
+CMD_SRCS += \
+../2837xD_RAM_lnk_cpu1.cmd 
+
+LIB_SRCS += \
+C:/ti/C2000Ware_3_04_00_00_Software/libraries/calibration/hrpwm/f2837xd/lib/SFO_v8_fpu_lib_build_c28_driverlib.lib \
+C:/ti/C2000Ware_3_04_00_00_Software/driverlib/f2837xd/driverlib/ccs/Debug/driverlib.lib 
+
+ASM_SRCS += \
+../dmac1.asm 
+
+C_SRCS += \
+../adc_ex11_multiple_soc_epwm.c \
+../data_packer.c \
+../wave_gen.c 
+
+C_DEPS += \
+./adc_ex11_multiple_soc_epwm.d \
+./data_packer.d \
+./wave_gen.d 
+
+OBJS += \
+./adc_ex11_multiple_soc_epwm.obj \
+./data_packer.obj \
+./dmac1.obj \
+./wave_gen.obj 
+
+ASM_DEPS += \
+./dmac1.d 
+
+OBJS__QUOTED += \
+"adc_ex11_multiple_soc_epwm.obj" \
+"data_packer.obj" \
+"dmac1.obj" \
+"wave_gen.obj" 
+
+C_DEPS__QUOTED += \
+"adc_ex11_multiple_soc_epwm.d" \
+"data_packer.d" \
+"wave_gen.d" 
+
+ASM_DEPS__QUOTED += \
+"dmac1.d" 
+
+C_SRCS__QUOTED += \
+"../adc_ex11_multiple_soc_epwm.c" \
+"../data_packer.c" \
+"../wave_gen.c" 
+
+ASM_SRCS__QUOTED += \
+"../dmac1.asm" 
+
+

@@ -1,0 +1,628 @@
+//#############################################################################
+//
+// FILE:   adc_ex11_multiple_soc_epwm.c
+//
+// TITLE:  ADC ePWM Triggering Multiple SOC
+//
+//! \addtogroup driver_example_list
+//! <h1>ADC ePWM Triggering Multiple SOC</h1>
+//!
+//! This example sets up ePWM1 to periodically trigger a set of conversions on
+//! ADCA and ADCD. This example demonstrates multiple ADCs working together
+//! to process of a batch of conversions using the available parallelism
+//! accross multiple ADCs.  
+//!
+//! ADCA Interrupt ISRs are used to read results of both ADCA and ADCD.
+//!
+//! \b External \b Connections \n
+//!  - A0, A1, A2 and D2, D3, D4 pins should be connected to signals to be
+//!    converted.
+//!
+//! \b Watch \b Variables \nf
+//! - \b adcAResult
+//! - \b adcBResult
+//
+//#############################################################################
+// $TI Release: F2837xD Support Library v3.12.00.00 $
+
+#define EPWM_FOR_ADC_BASE EPWM2_BASE
+//#define EPWM_FOR_PWM_BASE EPWM1_BASE
+#define  myEPWMk_BASE  EPWM1_BASE
+
+
+//
+// Included Files
+//
+#include "driverlib.h"
+#include "device.h"
+//#include <sine_wave_gen.c>
+void sinGen (int16_t signal[], int f, int len, int Fs);
+void cosGen (int16_t signal[], int f, int len, int Fs);
+void sinGenX (int16_t signal[], int len, int A, int P);
+//extern void pack [char data[], int32_t  accumA1I[], int32_t  accumA1Q[], int32_t  accumB1I[], int32_t  accumB1Q[]];
+void pack (uint16_t* data, int32_t  *accumA1I, int32_t  *accumA1Q, int32_t  *accumB1I, int32_t  *accumB1Q);
+
+//#include "board.h"// ? from chopper example 'init_board()
+//
+// Defines
+#define BUFLEN       500
+#define Fs           500000 //samplig frequency
+//
+#define EX_ADC_RESOLUTION       16
+// 12 for 12-bit conversion resolution, which supports (ADC_MODE_SINGLE_ENDED)
+// Sample on single pin (VREFLO is the low reference)
+// Or 16 for 16-bit conversion resolution, which supports (ADC_MODE_DIFFERENTIAL)
+// Sample on pair of pins (difference between pins is converted, subject to
+// common mode voltage requirements; see the device data manual)
+
+// Globals
+//uint8_t excitation[BUFLEN] = {5,3,8,1,9,1,8,3,6,6,3,8,1,9,1,8,3,6,5,4};
+
+uint16_t adcAResult;
+uint16_t adcBResult;
+
+int16_t adcAResults[BUFLEN] = {0};
+int16_t adcBResults[BUFLEN] = {0};
+
+uint8_t halfFilled = 0;  //flags to check if read buffers are full
+uint8_t fullFilled = 0;
+
+//store only 1 preiod of sinusoid. Sampling frequency = 500kHz. Signal1 frequency = 6.25kHz. Greatest common factor (500kHz, 6.25kHz) = 80
+#define signal1GCF  80
+//int16_t signal1sin[signal1GCF] = {0,2573,5131,7657,10135,12551,14890,17136,19277,21298,23188,24935,26527,27956,29212,30288,31176,31872,32371,32670,32767,32662,32355,31848,31144,30248,29165,27902,26467,24868,23115,21220,19193,17048,14798,12456,10037,7557,5029,2471,-103,-2676,-5233,-7757,-10233,-12646,-14981,-17224,-19360,-21376,-23261,-25001,-26588,-28010,-29259,-30327,-31208,-31896,-32387,-32678,-32767,-32653,-32338,-31823,-31112,-30208,-29118,-27848,-26406,-24800,-23042,-21141,-19110,-16960,-14706,-12361,-9939,-7456,-4927,-2368,206,2779,5334,7857,10331,12741,15073,17311,19443,21454,23333,25068,26648,28063,29305,30366,31239,31919,32402,32685,32766,32645,32321,31799,31079,30168,29071,27793,26345,24733,22969,21062,19026,16872,14614,12265,9841,7356,4825,2265,-309,-2881,-5436,-7957,-10429,-12836,-15164,-17399,-19526,-21532,-23405,-25134,-26708,-28116,-29351,-30404,-31270,-31942,-32417,-32692,-32765,-32635,-32304,-31774,-31047,-30128,-29023,-27739,-26283,-24665,-22895,-20983,-18942,-16783,-14521,-12170,-9743,-7255,-4723,-2162,412,2984,5538,8057,10527,12931,15256,17486,19608,21610,23477,25200,26767,28169,29396,30442,31300,31965,32432,32699,32764,32626,32287,31748,31014,30087,28975,27684,26222,24597,22821,20904,18858,16695,14429,12074,9644,7155,4622,2060,-515,-3087,-5639,-8157,-10624,-13026,-15347,-17573,-19691,-21687,-23549,-25266,-26826,-28221,-29442,-30480,-31331,-31988,-32447,-32705,-32762,-32616,-32269,-31723,-30980,-30046,-28927,-27628,-26160,-24529,-22747,-20824,-18773,-16606,-14336,-11978,-9546,-7054,-4519,-1957,618,3189,5741,8257,10721,13120,15438,17660,19773,21764,23621,25331,26885,28273,29487,30518,31361,32010,32461,32712,32760,32606,32251,31697,30946,30005,28878,27573,26097,24461,22673,20745,18689,16517,14244,11882,9447,6954,4417,1854,-721,-3292,-5842,-8356,-10819,-13214,-15529,-17747,-19855,-21841,-23692,-25397,-26944,-28325,-29532,-30555,-31390,-32032,-32475,-32717,-32758,-32596,-32233,-31670,-30912,-29963,-28829,-27517,-26035,-24392,-22598,-20665,-18604,-16428,-14151,-11786,-9348,-6853,-4315,-1751,824,3394,5943,8456,10916,13309,15619,17833,19937,21918,23763,25461,27003,28377,29576,30592,31420,32053,32488,32723,32755,32585,32214,31644,30878,29922,28780,27461,25972,24323,22524,20585,18519,16339,14058,11690,9250,6752,4213,1648,-927,-3497,-6045,-8555,-11013,-13403,-15710,-17920,-20019,-21994,-23834,-25526,-27061,-28428,-29620,-30629,-31449,-32074,-32502,-32728,-32752,-32574,-32195,-31617,-30843,-29879,-28731,-27405,-25909,-24254,-22449,-20505,-18434,-16249,-13965,-11593,-9151,-6651,-4111,-1545,1030,3599,6146,8655,11110,13497,15800,18006,20100,22071,23904,25591,27119,28480,29664,30666,31478,32095,32515,32733,32749,32563,32176,31590,30808,29837,28681,27348,25846,24184,22373,20424,18349,16160,13871,11497,9052,6550,4009,1442,-1133,-3702,-6247,-8754,-11207,-13591,-15890,-18092,-20181,-22147,-23975,-25655,-27177,-28530,-29708,-30702,-31506,-32116,-32527,-32737,-32746,-32551,-32156,-31562,-30773,-29794,-28631,-27291,-25783,-24115,-22298,-20343,-18263,-16070,-13778,-11400,-8953,-6449,-3906,-1339,1236,3804,6348,8853,11304,13684,15980,18178,20263,22222,24045,25719,27234,28581,29751,30738,31534,32136,32539,32742,32742,32539,32136,31534,30738,29751,28581,27234,25719,24045,22222,20263,18178,15980,13684,11304,8853,6348,3804,1236,-1339,-3906,-6449,-8953,-11400,-13778,-16070,-18263,-20343,-22298,-24115,-25783,-27291,-28631,-29794,-30773,-31562,-32156,-32551,-32746,-32737,-32527,-32116,-31506,-30702,-29708,-28530,-27177,-25655,-23975,-22147,-20181,-18092,-15890,-13591,-11207,-8754,-6247,-3702,-1133,1442,4009,6550,9052,11497,13871,16160,18349,20424,22373,24184,25846,27348,28681,29837,30808,31590,32176,32563,32749,32733,32515,32095,31478,30666,29664,28480,27119,25591,23904,22071,20100,18006,15800,13497,11110,8655,6146,3599,1030,-1545,-4111,-6651,-9151,-11593,-13965,-16249,-18434,-20505,-22449,-24254,-25909,-27405,-28731,-29879,-30843,-31617,-32195,-32574,-32752,-32728,-32502,-32074,-31449,-30629,-29620,-28428,-27061,-25526,-23834,-21994,-20019,-17920,-15710,-13403,-11013,-8555,-6045,-3497,-927,1648,4213,6752,9250,11690,14058,16339,18519,20585,22524,24323,25972,27461,28780,29922,30878,31644,32214,32585,32755,32723,32488,32053,31420,30592,29576,28377,27003,25461,23763,21918,19937,17833,15619,13309,10916,8456,5943,3394,824,-1751,-4315,-6853,-9348,-11786,-14151,-16428,-18604,-20665,-22598,-24392,-26035,-27517,-28829,-29963,-30912,-31670,-32233,-32596,-32758,-32717,-32475,-32032,-31390,-30555,-29532,-28325,-26944,-25397,-23692,-21841,-19855,-17747,-15529,-13214,-10819,-8356,-5842,-3292,-721,1854,4417,6954,9447,11882,14244,16517,18689,20745,22673,24461,26097,27573,28878,30005,30946,31697,32251,32606,32760,32712,32461,32010,31361,30518,29487,28273,26885,25331,23621,21764,19773,17660,15438,13120,10721,8257,5741,3189,618,-1957,-4519,-7054,-9546,-11978,-14336,-16606,-18773,-20824,-22747,-24529,-26160,-27628,-28927,-30046,-30980,-31723,-32269,-32616,-32762,-32705,-32447,-31988,-31331,-30480,-29442,-28221,-26826,-25266,-23549,-21687,-19691,-17573,-15347,-13026,-10624,-8157,-5639,-3087,-515,2060,4622,7155,9644,12074,14429,16695,18858,20904,22821,24597,26222,27684,28975,30087,31014,31748,32287,32626,32764,32699,32432,31965,31300,30442,29396,28169,26767,25200,23477,21610,19608,17486,15256,12931,10527,8057,5538,2984,412,-2162,-4723,-7255,-9743,-12170,-14521,-16783,-18942,-20983,-22895,-24665,-26283,-27739,-29023,-30128,-31047,-31774,-32304,-32635,-32765,-32692,-32417,-31942,-31270,-30404,-29351,-28116,-26708,-25134,-23405,-21532,-19526,-17399,-15164,-12836,-10429,-7957,-5436,-2881,-309,2265,4825,7356,9841,12265,14614,16872,19026,21062,22969,24733,26345,27793,29071,30168,31079,31799,32321,32645,32766,32685,32402,31919,31239,30366,29305,28063,26648,25068,23333,21454,19443,17311,15073,12741,10331,7857,5334,2779,206,-2368,-4927,-7456,-9939,-12361,-14706,-16960,-19110,-21141,-23042,-24800,-26406,-27848,-29118,-30208,-31112,-31823,-32338,-32653,-32767,-32678,-32387,-31896,-31208,-30327,-29259,-28010,-26588,-25001,-23261,-21376,-19360,-17224,-14981,-12646,-10233,-7757,-5233,-2676,-103,2471,5029,7557,10037,12456,14798,17048,19193,21220,23115,24868,26467,27902,29165,30248,31144,31848,32355,32662,32767,32670,32371,31872,31176,30288,29212,27956,26527,24935,23188,21298,19277,17136,14890,12551,10135,7657,5131,2573,0};
+//int16_t signal1cos[signal1GCF] = {32767,32666,32363,31860,31160,30268,29189,27929,26497,24901,23152,21259,19235,17092,14844,12504,10086,7607,5080,2522,-52,-2625,-5182,-7707,-10184,-12599,-14936,-17180,-19318,-21337,-23224,-24968,-26557,-27983,-29235,-30307,-31192,-31884,-32379,-32674,-32767,-32658,-32346,-31836,-31128,-30228,-29142,-27875,-26436,-24834,-23079,-21180,-19151,-17004,-14752,-12408,-9988,-7506,-4978,-2419,155,2727,5284,7807,10282,12694,15027,17268,19401,21415,23297,25035,26618,28036,29282,30346,31223,31907,32394,32681,32766,32649,32330,31811,31096,30188,29094,27821,26375,24767,23005,21102,19068,16916,14660,12313,9890,7406,4876,2317,-258,-2830,-5385,-7907,-10380,-12789,-15119,-17355,-19484,-21493,-23369,-25101,-26678,-28089,-29328,-30385,-31254,-31931,-32410,-32689,-32766,-32640,-32313,-31786,-31063,-30148,-29047,-27766,-26314,-24699,-22932,-21023,-18984,-16828,-14568,-12217,-9792,-7306,-4774,-2214,361,2933,5487,8007,10478,12884,15210,17442,19567,21571,23441,25167,26737,28142,29374,30423,31285,31954,32425,32696,32764,32631,32296,31761,31030,30108,28999,27711,26252,24631,22858,20944,18900,16739,14475,12122,9693,7205,4673,2111,-464,-3035,-5588,-8107,-10575,-12978,-15301,-17530,-19650,-21648,-23513,-25233,-26797,-28195,-29419,-30461,-31316,-31976,-32439,-32702,-32763,-32621,-32278,-31736,-30997,-30067,-28951,-27656,-26191,-24563,-22784,-20864,-18815,-16650,-14383,-12026,-9595,-7105,-4570,-2008,567,3138,5690,8207,10673,13073,15392,17617,19732,21726,23585,25299,26856,28247,29464,30499,31346,31999,32454,32709,32761,32611,32260,31710,30963,30026,28902,27601,26129,24495,22710,20785,18731,16562,14290,11930,9496,7004,4468,1905,-670,-3241,-5791,-8306,-10770,-13167,-15483,-17703,-19814,-21803,-23656,-25364,-26915,-28299,-29509,-30537,-31376,-32021,-32468,-32715,-32759,-32601,-32242,-31684,-30929,-29984,-28854,-27545,-26066,-24426,-22636,-20705,-18646,-16473,-14197,-11834,-9398,-6903,-4366,-1802,773,3343,5893,8406,10867,13262,15574,17790,19896,21879,23728,25429,26973,28351,29554,30574,31405,32042,32482,32720,32757,32591,32223,31657,30895,29943,28805,27489,26004,24358,22561,20625,18562,16383,14104,11738,9299,6803,4264,1699,-876,-3446,-5994,-8506,-10965,-13356,-15664,-17876,-19978,-21956,-23798,-25494,-27032,-28403,-29598,-30611,-31434,-32064,-32495,-32726,-32754,-32580,-32205,-31630,-30861,-29901,-28756,-27433,-25941,-24288,-22486,-20545,-18477,-16294,-14011,-11642,-9200,-6702,-4162,-1597,979,3548,6095,8605,11062,13450,15755,17963,20060,22032,23869,25559,27090,28454,29642,30648,31463,32085,32508,32731,32751,32569,32185,31603,30826,29858,28706,27376,25878,24219,22411,20464,18391,16205,13918,11545,9101,6601,4060,1494,-1082,-3650,-6197,-8704,-11159,-13544,-15845,-18049,-20141,-22109,-23940,-25623,-27148,-28505,-29686,-30684,-31492,-32106,-32521,-32735,-32747,-32557,-32166,-31576,-30791,-29816,-28656,-27320,-25814,-24150,-22336,-20384,-18306,-16115,-13825,-11449,-9002,-6500,-3957,-1391,1185,3753,6298,8804,11255,13637,15935,18135,20222,22185,24010,25687,27205,28556,29730,30720,31520,32126,32533,32740,32744,32545,32146,31548,30756,29773,28606,27263,25751,24080,22260,20303,18220,16025,13731,11352,8903,6399,3855,1288,-1288,-3855,-6399,-8903,-11352,-13731,-16025,-18220,-20303,-22260,-24080,-25751,-27263,-28606,-29773,-30756,-31548,-32146,-32545,-32744,-32740,-32533,-32126,-31520,-30720,-29730,-28556,-27205,-25687,-24010,-22185,-20222,-18135,-15935,-13637,-11255,-8804,-6298,-3753,-1185,1391,3957,6500,9002,11449,13825,16115,18306,20384,22336,24150,25814,27320,28656,29816,30791,31576,32166,32557,32747,32735,32521,32106,31492,30684,29686,28505,27148,25623,23940,22109,20141,18049,15845,13544,11159,8704,6197,3650,1082,-1494,-4060,-6601,-9101,-11545,-13918,-16205,-18391,-20464,-22411,-24219,-25878,-27376,-28706,-29858,-30826,-31603,-32185,-32569,-32751,-32731,-32508,-32085,-31463,-30648,-29642,-28454,-27090,-25559,-23869,-22032,-20060,-17963,-15755,-13450,-11062,-8605,-6095,-3548,-979,1597,4162,6702,9200,11642,14011,16294,18477,20545,22486,24288,25941,27433,28756,29901,30861,31630,32205,32580,32754,32726,32495,32064,31434,30611,29598,28403,27032,25494,23798,21956,19978,17876,15664,13356,10965,8506,5994,3446,876,-1699,-4264,-6803,-9299,-11738,-14104,-16384,-18562,-20625,-22561,-24358,-26004,-27489,-28805,-29943,-30895,-31657,-32223,-32591,-32757,-32720,-32482,-32042,-31405,-30574,-29554,-28351,-26973,-25429,-23728,-21879,-19896,-17790,-15574,-13262,-10867,-8406,-5893,-3343,-773,1802,4366,6903,9398,11834,14197,16473,18646,20705,22636,24426,26066,27545,28854,29984,30929,31684,32242,32601,32759,32715,32468,32021,31376,30537,29509,28299,26915,25364,23656,21803,19814,17703,15483,13167,10770,8306,5791,3241,670,-1905,-4468,-7004,-9496,-11930,-14290,-16562,-18731,-20785,-22710,-24495,-26129,-27601,-28902,-30026,-30963,-31710,-32260,-32611,-32761,-32709,-32454,-31999,-31346,-30499,-29464,-28247,-26856,-25299,-23585,-21726,-19732,-17617,-15392,-13073,-10673,-8207,-5690,-3138,-567,2008,4570,7105,9595,12026,14383,16650,18815,20864,22784,24563,26191,27656,28951,30067,30997,31736,32278,32621,32763,32702,32439,31976,31316,30461,29419,28195,26797,25233,23513,21648,19650,17530,15301,12978,10575,8107,5588,3035,464,-2111,-4673,-7205,-9693,-12122,-14475,-16739,-18900,-20944,-22858,-24631,-26252,-27711,-28999,-30108,-31030,-31761,-32296,-32631,-32764,-32696,-32425,-31954,-31285,-30423,-29374,-28142,-26737,-25167,-23441,-21571,-19567,-17442,-15210,-12884,-10478,-8007,-5487,-2933,-361,2214,4774,7306,9792,12217,14568,16828,18984,21023,22932,24699,26314,27766,29047,30148,31063,31786,32313,32640,32766,32689,32410,31931,31254,30385,29328,28089,26678,25101,23369,21493,19484,17355,15119,12789,10380,7907,5385,2830,258,-2317,-4876,-7406,-9890,-12313,-14660,-16916,-19068,-21102,-23005,-24767,-26375,-27821,-29094,-30188,-31096,-31811,-32330,-32649,-32766,-32681,-32394,-31907,-31223,-30346,-29282,-28036,-26618,-25035,-23297,-21415,-19401,-17268,-15027,-12694,-10282,-7807,-5284,-2727,-155,2419,4978,7506,9988,12408,14752,17004,19151,21180,23079,24834,26436,27875,29142,30228,31128,31836,32346,32658,32767,32674,32379,31884,31192,30307,29235,27983,26557,24968,23224,21337,19318,17180,14936,12599,10184,7707,5182,2625,52,-2522,-5080,-7607,-10086,-12504,-14844,-17092,-19235,-21259,-23152,-24901,-26497,-27929,-29189,-30268,-31160,-31860,-32363,-32666,-32767};
+int16_t signal1sin[BUFLEN] = {0};
+int16_t signal1cos[BUFLEN] = {0};
+
+uint16_t loopCounter = 0;
+volatile uint16_t packetNumber = 0;
+
+
+//==  Function Prototypes
+void initEPWM_chopper(uint32_t base);
+
+void configureADC(uint32_t adcBase);
+void initPWMchopper (void);
+void initEADC_PWM();
+void initEPWM_PWM(void);
+void initADCSOC(void);
+__interrupt void adcA1ISR(void);
+
+
+/*
+void writeInt (int val){
+    char buffer [9];
+    int temp;
+    int i = 0;
+    int length = 0;
+    int negFlag = 0;
+
+    if (val<0) {
+        negFlag = 1;
+        val = -val;
+    }
+
+    if (!val)
+     buffer[0] = 48;
+
+    while (val){
+        temp = val%10;
+        val = val/10;
+        buffer[i] = temp+48;
+        i++;
+        length++;
+    }
+
+   // SCI_writeCharBlockingFIFO(SCIA_BASE, length + 48);
+    if (negFlag)
+        SCI_writeCharBlockingFIFO(SCIA_BASE, 45); //negative sign
+
+    while (length--)
+        SCI_writeCharBlockingFIFO(SCIA_BASE, buffer[length]);
+
+    SCI_writeCharBlockingFIFO(SCIA_BASE, 10); //newLine
+}
+*/
+//
+// Main
+//
+
+
+void main(void)
+{   sinGen(signal1sin,6250,BUFLEN, Fs);
+    cosGen(signal1cos,6250,BUFLEN, Fs);
+
+    unsigned char *msg;
+    uint16_t* data;
+
+    // Initialize device clock and peripherals
+    Device_init();
+    // Disable pin locks and enable internal pullups.
+    Device_initGPIO();
+
+     // from 'Board_init' (.c/.h)
+  //--   EALLOW;
+    //EPWM1 -> myEPWM1 Pinmux
+    GPIO_setPinConfig(GPIO_0_EPWM1A);
+   // GPIO_setPinConfig(GPIO_1_EPWM1B);
+ //--   EDIS;
+
+
+        // Configuration for the SCI Rx pin.
+        //
+        GPIO_setMasterCore(DEVICE_GPIO_PIN_SCIRXDA, GPIO_CORE_CPU1);
+        GPIO_setPinConfig(DEVICE_GPIO_CFG_SCIRXDA);
+        GPIO_setDirectionMode(DEVICE_GPIO_PIN_SCIRXDA, GPIO_DIR_MODE_IN);
+        GPIO_setPadConfig(DEVICE_GPIO_PIN_SCIRXDA, GPIO_PIN_TYPE_STD);
+        GPIO_setQualificationMode(DEVICE_GPIO_PIN_SCIRXDA, GPIO_QUAL_ASYNC);
+
+        //
+        // Configuration for the SCI Tx pin.
+        //
+        GPIO_setMasterCore(DEVICE_GPIO_PIN_SCITXDA, GPIO_CORE_CPU1);
+        GPIO_setPinConfig(DEVICE_GPIO_CFG_SCITXDA);
+        GPIO_setDirectionMode(DEVICE_GPIO_PIN_SCITXDA, GPIO_DIR_MODE_OUT);
+        GPIO_setPadConfig(DEVICE_GPIO_PIN_SCITXDA, GPIO_PIN_TYPE_STD);
+        GPIO_setQualificationMode(DEVICE_GPIO_PIN_SCITXDA, GPIO_QUAL_ASYNC);
+
+
+        //--- Configure GPIO34 as output (connected to LED)
+            GPIO_setPadConfig(34, GPIO_PIN_TYPE_PULLUP);     // Enable pull-up on GPIO34
+            GPIO_setPinConfig(GPIO_34_GPIO34);               // GPIO34 = GPIO34
+            GPIO_setDirectionMode(34, GPIO_DIR_MODE_OUT);    // GPIO34 = output
+            GPIO_writePin(34, 1);                            // Load output latch
+
+/*
+        //--- Configure GPIO0 as output (connected to OUTPUT)
+            GPIO_setPadConfig(0, GPIO_PIN_TYPE_PULLUP);     // Enable pull-up on GPIO34
+            GPIO_setPinConfig(GPIO_0_GPIO0);               // GPIO34 = GPIO34
+            GPIO_setDirectionMode(0, GPIO_DIR_MODE_OUT);    // GPIO34 = output
+            GPIO_writePin(0, 1);                            // Load output latch
+*/
+
+
+    //
+    // Initialize PIE and clear PIE registers. Disables CPU interrupts.
+    //
+    Interrupt_initModule();
+
+    //
+    // Initialize the PIE vector table with pointers to the shell Interrupt
+    // Service Routines (ISR).
+    //
+    Interrupt_initVectorTable();
+//--    Board_init();
+    SysCtl_disablePeripheral(SYSCTL_PERIPH_CLK_TBCLKSYNC);
+
+        SCI_performSoftwareReset(SCIA_BASE);
+
+    //
+       // Configure SCIA for echoback.
+       //
+       SCI_setConfig(SCIA_BASE, DEVICE_LSPCLK_FREQ, 115200, (SCI_CONFIG_WLEN_8 |
+                                                           SCI_CONFIG_STOP_ONE |
+                                                           SCI_CONFIG_PAR_NONE));
+       SCI_resetChannels(SCIA_BASE);
+       SCI_resetRxFIFO(SCIA_BASE);
+       SCI_resetTxFIFO(SCIA_BASE);
+       SCI_clearInterruptStatus(SCIA_BASE, SCI_INT_TXFF | SCI_INT_RXFF);
+       SCI_enableFIFO(SCIA_BASE);
+       SCI_enableModule(SCIA_BASE);
+       SCI_performSoftwareReset(SCIA_BASE);
+
+       // Send starting message.
+       msg = "\r\n\n\nSTARTING!\n\0";
+       SCI_writeCharArray(SCIA_BASE, (uint16_t*)msg, 15);
+
+    //
+    // Interrupts that are used in this example are re-mapped to ISR functions
+    Interrupt_register(INT_ADCA1, &adcA1ISR);
+
+    // Set up the ADC and the ePWM and initialize the SOC
+    //
+    configureADC(ADCA_BASE);
+    configureADC(ADCB_BASE);
+
+ //   initEPWM_PWM(); //OM
+   //  initPWMchopper ();
+    initEPWM_chopper (myEPWMk_BASE); // OM
+
+    initEPWM_ADC();
+    initADCSOC();
+
+
+    // Enable ADC interrupt
+    Interrupt_enable(INT_ADCA1);
+
+    SysCtl_enablePeripheral(SYSCTL_PERIPH_CLK_TBCLKSYNC);
+    // Enable Global Interrupt (INTM) and realtime interrupt (DBGM)
+
+    EINT;
+    ERTM;
+
+    //
+    // Start ePWM1, enabling SOCA and putting the counter in up-count mode
+    //
+  EPWM_enableADCTrigger(EPWM_FOR_ADC_BASE , EPWM_SOC_B);
+  EPWM_setTimeBaseCounterMode(EPWM_FOR_ADC_BASE , EPWM_COUNTER_MODE_UP);
+//  EPWM_setTimeBaseCounterMode(EPWM_FOR_PWM_BASE , EPWM_COUNTER_MODE_UP); //OM
+
+
+    while(1){
+        static int32_t  accumA1I = 0; //accumulate excitation signal 1 in phase component
+        static int32_t  accumA1Q = 0; //accumulate excitation signal 1 quadrature component
+        static int32_t  accumB1I = 0; //accumulate response signal 1 in phase component
+        static int32_t  accumB1Q = 0; //accumulate response signal 1 quadrature component
+
+        // TEST
+        static int16_t syntWaveA[BUFLEN] = {0};
+        static int16_t syntWaveB[BUFLEN] = {0};
+        static int test = 1;
+        if (test){  //calculate just once
+            sinGenX (syntWaveA, BUFLEN, 1000, 0);
+            sinGenX (syntWaveB, BUFLEN, 1000, 90);
+            int i;
+            for (i=0; i<BUFLEN; i++){
+                accumA1I += ((int32_t)signal1sin[i]*syntWaveA[i]);
+                accumA1Q += ((int32_t)signal1cos[i]*syntWaveA[i]);
+                accumB1I += ((int32_t)signal1sin[i]*syntWaveB[i]);
+                accumB1Q += ((int32_t)signal1cos[i]*syntWaveB[i]);
+            }
+            test = 0;
+        }
+        // END OF TEST
+
+
+        if (halfFilled == 1) //wait until half buffer to fill
+        {
+            //perform DFT on the first half
+            int i;
+            for (i=0; i<BUFLEN/2; i++){
+                //int aIndex = i%signal1GCF;
+                /*
+                accumA1I = accumA1I + signal1sin[i]*adcAResults[i];
+                accumA1Q = accumA1Q + signal1cos[i]*adcAResults[i];
+
+                accumB1I = accumB1I + signal1sin[i]*adcBResults[i];
+                accumB1Q = accumB1Q + signal1cos[i]*adcBResults[i];
+               */
+            }
+            halfFilled = 0;
+        }
+
+        if (fullFilled == 1) //wait until full buffer to fill
+        {
+            //perform DFT on the second half
+            int i;
+            for (i=BUFLEN/2; i<BUFLEN; i++){
+                /*
+                accumA1I = accumA1I + signal1sin[i]*adcAResults[i];
+                accumA1Q = accumA1Q + signal1cos[i]*adcAResults[i];
+
+                accumB1I = accumB1I + signal1sin[i]*adcBResults[i];
+                accumB1Q = accumB1Q + signal1cos[i]*adcBResults[i];
+               */
+            }
+        }
+
+        if (fullFilled == 1) {
+        //do the impedance calculation
+        //send result
+        pack (data, &packetNumber, &accumA1I, &accumA1Q, &accumB1I, &accumB1Q);
+        SCI_writeCharArray(SCIA_BASE, data, 12); //replace with non-blocking code
+        /*
+        int j;
+        for (j=0; j<12; j++){
+            HWREGH(SCIA_BASE + SCI_O_TXBUF) = data[j];
+        }
+        */
+
+        /*  //comment out for test
+        accumA1I = 0; // to start again or to continue? If continue it will overflow eventually
+        accumA1Q = 0;
+        accumB1I = 0;
+        accumB1Q = 0;
+        */
+        fullFilled = 0;
+
+
+        }
+    }
+}
+
+//
+// configureADC - Write ADC configurations and power up the ADC for the
+// selected ADC
+//
+void configureADC(uint32_t adcBase)
+{
+    //
+    // Set ADCDLK divider to /4
+    //
+    ADC_setPrescaler(adcBase, ADC_CLK_DIV_4_0);
+
+    // Set resolution and signal mode (see #defines above) and load
+    // corresponding trims.
+
+#if(EX_ADC_RESOLUTION == 12)
+    ADC_setMode(adcBase, ADC_RESOLUTION_12BIT, ADC_MODE_SINGLE_ENDED);
+#elif(EX_ADC_RESOLUTION == 16)
+    ADC_setMode(adcBase, ADC_RESOLUTION_16BIT, ADC_MODE_DIFFERENTIAL);
+#endif
+
+    // Set pulse positions to late
+    ADC_setInterruptPulseMode(adcBase, ADC_PULSE_END_OF_CONV);
+
+    // Power up the ADCs and then delay for 1 ms
+    ADC_enableConverter(adcBase);
+
+    // Delay for 1ms to allow ADC time to power up
+    DEVICE_DELAY_US(1000);
+}
+
+//
+
+/*
+void initEPWM_PWM(void)
+{
+    // Disable SOCA
+  //  EPWM_disableADCTrigger(EPWM_FOR_PWM_BASE , EPWM_SOC_B);
+
+    // Configure the SOC to occur on the first up-count event
+ //   EPWM_setADCTriggerSource(EPWM_FOR_PWM_BASE , EPWM_SOC_B, EPWM_SOC_TBCTR_U_CMPB);
+ //   EPWM_setADCTriggerEventPrescale(EPWM_FOR_ADC_BASE , EPWM_SOC_B, 1);
+
+    // by trial and fail 500kHz sampling rate is obtained by these values
+    EPWM_setCounterCompareValue(EPWM_FOR_PWM_BASE , EPWM_COUNTER_COMPARE_B, 100);
+    EPWM_setTimeBasePeriod(EPWM_FOR_PWM_BASE , 199);
+
+    // Set the local ePWM module clock divider to /1
+    EPWM_setClockPrescaler(EPWM_FOR_PWM_BASE , EPWM_CLOCK_DIVIDER_1,  EPWM_HSCLOCK_DIVIDER_1);
+
+    // Freeze the counter
+    EPWM_setTimeBaseCounterMode(EPWM_FOR_PWM_BASE , EPWM_COUNTER_MODE_STOP_FREEZE);
+}
+*/
+
+
+//
+void initEPWM_ADC(void)
+{
+    // Disable SOCA
+    EPWM_disableADCTrigger(EPWM_FOR_ADC_BASE , EPWM_SOC_B);
+
+    // Configure the SOC to occur on the first up-count event
+    EPWM_setADCTriggerSource(EPWM_FOR_ADC_BASE , EPWM_SOC_B, EPWM_SOC_TBCTR_U_CMPB);
+    EPWM_setADCTriggerEventPrescale(EPWM_FOR_ADC_BASE , EPWM_SOC_B, 1);
+
+    // by trial and fail 500kHz sampling rate is obtained by these values
+    EPWM_setCounterCompareValue(EPWM_FOR_ADC_BASE , EPWM_COUNTER_COMPARE_B, 100);
+    EPWM_setTimeBasePeriod(EPWM_FOR_ADC_BASE , 199);
+
+    // Set the local ePWM module clock divider to /1
+    EPWM_setClockPrescaler(EPWM_FOR_ADC_BASE , EPWM_CLOCK_DIVIDER_1,  EPWM_HSCLOCK_DIVIDER_1);
+
+    // Freeze the counter
+    EPWM_setTimeBaseCounterMode(EPWM_FOR_ADC_BASE , EPWM_COUNTER_MODE_STOP_FREEZE);
+}
+
+//
+// Function to configure SOCs on ADCA and ADCD to be triggered by ePWM1.
+//
+void initADCSOC(void)
+{
+        uint16_t acqps;
+    // Determine minimum acquisition window (in SYSCLKS) based on resolution
+    //
+    if(EX_ADC_RESOLUTION == 12)
+    {
+        acqps = 14; // 75ns
+    }
+    else //resolution is 16-bit
+    {
+        acqps = 63; // 320ns
+    }
+    //
+    // - NOTE: A longer sampling window will be required if the ADC driving
+    //   source is less than ideal (an ideal source would be a high bandwidth
+
+    //
+    // Select the channels to convert and the configure the ePWM trigger 
+    //
+
+/*  ADC_setupSOC(ADCA_BASE, ADC_SOC_NUMBER0, ADC_TRIGGER_EPWM2_SOCB,
+                 ADC_CH_ADCIN0_ADCIN1, acqps);
+    ADC_setupSOC(ADCA_BASE, ADC_SOC_NUMBER1, ADC_TRIGGER_EPWM2_SOCB,
+                 ADC_CH_ADCIN1, acqps);
+*/
+    ADC_setupSOC(ADCA_BASE, ADC_SOC_NUMBER2, ADC_TRIGGER_EPWM2_SOCB,
+                 ADC_CH_ADCIN2_ADCIN3, acqps);
+
+/*    ADC_setupSOC(ADCD_BASE, ADC_SOC_NUMBER0, ADC_TRIGGER_EPWM2_SOCB,
+                 ADC_CH_ADCIN2, acqps);
+    ADC_setupSOC(ADCD_BASE, ADC_SOC_NUMBER1, ADC_TRIGGER_EPWM2_SOCB,
+                 ADC_CH_ADCIN3, acqps);
+*/
+
+    ADC_setupSOC(ADCB_BASE, ADC_SOC_NUMBER2, ADC_TRIGGER_EPWM2_SOCB,
+                 ADC_CH_ADCIN2_ADCIN3, acqps);
+
+    //
+    // Select SOC2 on ADCA as the interrupt source.  SOC2 on ADCD will end at
+    // the same time, so either SOC2 would be an acceptable interrupt triggger.
+    //
+    ADC_setInterruptSource(ADCA_BASE, ADC_INT_NUMBER1, ADC_SOC_NUMBER2);
+    ADC_enableInterrupt(ADCA_BASE, ADC_INT_NUMBER1);
+    ADC_clearInterruptStatus(ADCA_BASE, ADC_INT_NUMBER1);
+}
+
+// ADC A Interrupt 1 ISR
+
+// OM now globals
+long int counter = 0; // loop counter
+long int timer = 0;
+uint16_t excitIndex = 0;
+
+__interrupt void adcA1ISR(void)
+{
+    //
+    // Store results
+    //
+ //   adcAResult0 = ADC_readResult(ADCARESULT_BASE, ADC_SOC_NUMBER0);
+ //   adcAResult1 = ADC_readResult(ADCARESULT_BASE, ADC_SOC_NUMBER1);
+    adcAResult = ADC_readResult(ADCARESULT_BASE, ADC_SOC_NUMBER2);
+//    adcDResult0 = ADC_readResult(ADCDRESULT_BASE, ADC_SOC_NUMBER0);
+//    adcDResult1 = ADC_readResult(ADCDRESULT_BASE, ADC_SOC_NUMBER1);
+    adcBResult = ADC_readResult(ADCBRESULT_BASE, ADC_SOC_NUMBER2);
+
+    //
+    // Clear the interrupt flag
+    //
+    ADC_clearInterruptStatus(ADCA_BASE, ADC_INT_NUMBER1);
+
+    //
+    // Check if overflow has occurred
+    //
+    if(true == ADC_getInterruptOverflowStatus(ADCA_BASE, ADC_INT_NUMBER1))
+    {
+        ADC_clearInterruptOverflowStatus(ADCA_BASE, ADC_INT_NUMBER1);
+        ADC_clearInterruptStatus(ADCA_BASE, ADC_INT_NUMBER1);
+    }
+
+    // OM now globals
+ //   static long int counter = 0; // loop counter
+ //   static long int timer = 0;
+ //   static uint16_t excitIndex = 0;
+
+
+    adcAResults[counter]=adcAResult-32767; //make signed
+    adcBResults[counter]=adcBResult-32767;
+    counter++;
+
+    /*
+    if(++timer >= 80000) { // set period - 10 makes 40 us
+           GPIO_togglePin(34);                   // Toggle the PIN
+           timer = 0;
+       }
+    */
+
+
+    //static unsigned char *msg;
+    if (counter+1 == BUFLEN/2){
+        halfFilled = 1;
+        /*msg = "\nBUFFER_A\n\0";
+        SCI_writeCharArray(SCIA_BASE, (uint16_t*)msg, 11);*/
+        /*int i;
+        for (i=0; i<BUFLEN/2; i++)
+           writeInt(adcAResults[i]);*/
+
+        /*msg = "\nBUFFER_B\n\0";
+        SCI_writeCharArray(SCIA_BASE, (uint16_t*)msg, 11);*/
+        /*for (i=0; i<BUFLEN; i++)
+           writeInt(adcBResults[i]);*/
+     //   counter = 0;
+     }
+
+    if (counter+1 > BUFLEN){
+        fullFilled = 1;
+        counter = 0;
+        packetNumber++;
+        /*int i;
+        for (i=BUFLEN/2; i<BUFLEN; i++)
+           writeInt(adcAResults[i]);*/
+    }
+
+
+
+
+    Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP1);  // Acknowledge the interrupt
+   // GPIO_writePin(34, 1);
+   //  writeInt(adcAResult);
+}
+/*
+void initPWMchopper (void){
+initEPWM(myEPWMk_BASE);
+EPWM_setChopperDutyCycle(myEPWMk_BASE, 5);
+EPWM_setChopperFreq(myEPWMk_BASE, 3);
+EPWM_enableChopper(myEPWMk_BASE);
+}
+*/
+
+// chopper epwm example
+
+void initEPWM_chopper(uint32_t base)
+{
+    //
+    // Set-up TBCLK
+
+#define EPWM_TIMER_TBPRD    500UL
+    EPWM_setTimeBasePeriod(base, EPWM_TIMER_TBPRD);
+    EPWM_setPhaseShift(base, 0U);
+    EPWM_setTimeBaseCounter(base, 0U);
+    EPWM_setTimeBaseCounterMode(base, EPWM_COUNTER_MODE_UP_DOWN);
+    EPWM_disablePhaseShiftLoad(base);
+
+    //
+    // Set ePWM clock pre-scaler
+    //
+    EPWM_setClockPrescaler(base,
+                           EPWM_CLOCK_DIVIDER_4,
+                           EPWM_HSCLOCK_DIVIDER_4);
+
+    //
+    // Set up shadowing
+    //
+    EPWM_setCounterCompareShadowLoadMode(base,
+                                         EPWM_COUNTER_COMPARE_A,
+                                         EPWM_COMP_LOAD_ON_CNTR_ZERO);
+
+    //
+    // Set-up compare
+    //
+    EPWM_setCounterCompareValue(base, EPWM_COUNTER_COMPARE_A, EPWM_TIMER_TBPRD/2);
+//..    EPWM_setCounterCompareValue(base, EPWM_COUNTER_COMPARE_B, 3*EPWM_TIMER_TBPRD/4);
+
+    //
+    // Set actions
+    //
+    EPWM_setActionQualifierAction(base,
+                                      EPWM_AQ_OUTPUT_A,
+                                      EPWM_AQ_OUTPUT_LOW,
+                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_ZERO);
+    EPWM_setActionQualifierAction(base,
+                                      EPWM_AQ_OUTPUT_A,
+                                      EPWM_AQ_OUTPUT_HIGH,
+                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_UP_CMPA);
+    EPWM_setActionQualifierAction(base,
+                                      EPWM_AQ_OUTPUT_A,
+                                      EPWM_AQ_OUTPUT_NO_CHANGE,
+                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_PERIOD);
+    EPWM_setActionQualifierAction(base,
+                                      EPWM_AQ_OUTPUT_A,
+                                      EPWM_AQ_OUTPUT_LOW,
+                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_DOWN_CMPA);
+    /*
+    EPWM_setActionQualifierAction(base,
+                                      EPWM_AQ_OUTPUT_B,
+                                      EPWM_AQ_OUTPUT_LOW,
+                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_ZERO);
+    EPWM_setActionQualifierAction(base,
+                                      EPWM_AQ_OUTPUT_B,
+                                      EPWM_AQ_OUTPUT_HIGH,
+                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_UP_CMPB);
+    EPWM_setActionQualifierAction(base,
+                                      EPWM_AQ_OUTPUT_B,
+                                      EPWM_AQ_OUTPUT_NO_CHANGE,
+                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_PERIOD);
+    EPWM_setActionQualifierAction(base,
+                                      EPWM_AQ_OUTPUT_B,
+                                      EPWM_AQ_OUTPUT_LOW,
+                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_DOWN_CMPB);
+
+*/
+ //--
+
+
+}
+
+

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;adc_ex11_multiple_soc_epwm/sine_wave_gen.c&apos; to &apos;wave_gen.c&apos;" description="Rename resource &apos;sine_wave_gen.c&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="sine_wave_gen.c" name="wave_gen.c" stamp="1634032277893" updateReferences="true"/>
+</session>

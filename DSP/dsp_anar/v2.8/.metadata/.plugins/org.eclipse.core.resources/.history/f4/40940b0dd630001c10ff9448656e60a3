@@ -1,0 +1,30 @@
+/*
+ * data_packer.c
+ *
+ *  Created on: Oct 12, 2021
+ *      Author: anar
+ */
+#include "device.h"
+
+void pack (uint8_t* data, uint16_t *packetNumber, int32_t  *accumA1I, int32_t  *accumA1Q, int32_t  *accumB1I, int32_t  *accumB1Q) {
+
+    data[0] = 0xFF;  //synchronization
+    data[1] = 0xFF;
+
+    data[2] = (*packetNumber) & 0xFF;  //prepared packet count
+    data[3] = (*packetNumber >> 8) & 0xFF;
+
+    data[4] = (*accumA1I) & 0xFF; //send only 16 MSB
+    data[5] = (*accumA1I >> 8) & 0xFF;
+
+    data[6] = (*accumA1Q) & 0xFF;
+    data[7] = (*accumA1Q >> 8) & 0xFF;
+
+    data[8] = (*accumB1I) & 0xFF;
+    data[9] = (*accumB1I >> 8) & 0xFF;
+
+    data[10] = (*accumB1Q) & 0xFF;
+    data[11] = (*accumB1Q >> 8) & 0xFF;
+}
+
+

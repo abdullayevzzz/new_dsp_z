@@ -1,0 +1,18 @@
+
+**** Build of configuration CPU1_RAM for project sci_ex3_echoback ****
+
+"C:\\ti\\ccs1040\\ccs\\utils\\bin\\gmake" -k -j 4 all -O 
+ 
+Building file: "../sci_ex3_echoback.c"
+Invoking: C2000 Compiler
+"C:/ti/ccs1040/ccs/tools/compiler/ti-cgt-c2000_20.2.5.LTS/bin/cl2000" -v28 -ml -mt --cla_support=cla1 --float_support=fpu32 --tmu_support=tmu0 --vcu_support=vcu2 -Ooff --include_path="C:/Users/abdul/OneDrive/Desktop/dsp_board/dsp_code/v2.1/sci_ex3_echoback" --include_path="C:/Users/abdul/OneDrive/Desktop/dsp_board/dsp_code/v2.1/sci_ex3_echoback/device" --include_path="C:/ti/C2000Ware_3_04_00_00_Software/driverlib/f2837xd/driverlib" --include_path="C:/ti/ccs1040/ccs/tools/compiler/ti-cgt-c2000_20.2.5.LTS/include" --define=_LAUNCHXL_F28379D --define=DEBUG --define=CPU1 --diag_suppress=10063 --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi --preproc_with_compile --preproc_dependency="sci_ex3_echoback.d_raw" --include_path="C:/Users/abdul/OneDrive/Desktop/dsp_board/dsp_code/v2.1/sci_ex3_echoback/CPU1_RAM/syscfg"  "../sci_ex3_echoback.c"
+Finished building: "../sci_ex3_echoback.c"
+ 
+Building target: "sci_ex3_echoback.out"
+Invoking: C2000 Linker
+"C:/ti/ccs1040/ccs/tools/compiler/ti-cgt-c2000_20.2.5.LTS/bin/cl2000" -v28 -ml -mt --cla_support=cla1 --float_support=fpu32 --tmu_support=tmu0 --vcu_support=vcu2 -Ooff --define=_LAUNCHXL_F28379D --define=DEBUG --define=CPU1 --diag_suppress=10063 --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi -z -m"sci_ex3_echoback.map" --stack_size=0x100 --warn_sections -i"C:/ti/ccs1040/ccs/tools/compiler/ti-cgt-c2000_20.2.5.LTS/lib" -i"C:/ti/ccs1040/ccs/tools/compiler/ti-cgt-c2000_20.2.5.LTS/include" --reread_libs --diag_wrap=off --display_error_number --xml_link_info="sci_ex3_echoback_linkInfo.xml" --entry_point=code_start --rom_model -o "sci_ex3_echoback.out" "./sci_ex3_echoback.obj" "./device/F2837xD_CodeStartBranch.obj" "./device/device.obj" "../2837xD_RAM_lnk_cpu1.cmd" "C:/ti/C2000Ware_3_04_00_00_Software/driverlib/f2837xd/driverlib/ccs/Debug/driverlib.lib"  -llibc.a 
+<Linking>
+Finished building target: "sci_ex3_echoback.out"
+ 
+
+**** Build Finished ****

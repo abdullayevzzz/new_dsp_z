@@ -1,0 +1,39 @@
+;// INPUT PARAMETERS: Arrya1 [in] 16-bit array pointer for the first element in array
+;// Arrya2 [in] 16-bit array pointer for the first element in array
+;// Len [in] 16-bit unsigned decimal value of DMAC length (Length[Array1&2]/2)-1)
+;// Acc_Shift [in] 16-bit unsigned decimal value of end-result right shift before returning the end-result, range of 0 - 15
+;//
+;// RETURN VALUE: ACCValue [out] 32-bit signed decimal value of shifted ACC registry (dmac e.g. DFT end-result of Imaginary or Real value)
+;//
+;// GLOBAL VARIABLES: none
+;//
+
+
+
+     .global _dmac ;Declaration of global assembly subroutine
+;--     .sect "ramfuncs" ;Compiler macros are used to place execution-time critical subroutine to RAM, subroutines are copied from internal FLASH to RAM (by MemCopy()) during device boot
+
+  ;;;.def  _dmac;; OM added
+
+_dmac:
+ MOVL XAR2, XAR4 ;In function call the first 16-bit argument (*Array1[0]) is moved to XAR4 registry, we need to move the pointer value to XAR2 for DMAC instruction
+ MOVL XAR7, XAR5 ;In function call the second 16-bit argument (*Array2[0]) is moved to XAR5 registry, we need to move the pointer value to XAR7 for DMAC instruction
+ MOVZ AR5, @AL ;Accumulation registry lower word AL holds the third argument of DMAC length (len), move it to registry AR5 for RPT instruction
+ MOVZ AR4, @AH ;Accumulation registry higher word AH holds the forth argument (acc_shift), move it to AR4 to be used for end-result Right shift instruction SFR
+ sSPM 0; -6 ;Set product shift to >> 5
+ ZAPA ;Zero ACC, P, OVC
+ RPT AR5 ;Repeat the next command (N/2)-1=len times, where N is the actual arry length
+ || DMAC P, *XAR2++, *XAR7++ ;ACC = ACC + (A[i+1] * B[i+1]) >> 5
+ ;P = P + (A[i] * B[i]) >> 5
+ ADDL ACC,P     ;Add final product
+
+; ==O.M.  can be used, if intterst?
+;== MOVL XAR5, *-SP[4] ;Get the fifth argument for the variable pointer where the overflow counter value is stored, reusing XAR5 register because the value is not needed any more
+;== MOVU *XAR5, OVC ;updated with new CPU status registry overflow counter value before the assembly routine returns
+
+ SETC SXM ;Set SXM for sign extension mode
+ MOV T, @AR4 ;Set the shift amount value
+ SFR ACC, T ;Right shift the content of the ACC register
+
+ SPM 0             ;Shift mode back to zero
+ LRETR

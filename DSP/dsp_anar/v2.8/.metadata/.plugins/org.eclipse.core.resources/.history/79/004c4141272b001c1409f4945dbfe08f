@@ -1,0 +1,31 @@
+/*
+ * data_packer.c
+ *
+ *  Created on: Oct 12, 2021
+ *      Author: anar
+ */
+#include "device.h"
+
+void pack (char data[], int32_t  accumA1I, int32_t  accumA1Q, int32_t  accumB1I, int32_t  accumB1Q) {
+    data[0] = accumA1I & 0xFF;
+    data[1] = (accumA1I >> 8) & 0xFF;
+    data[2] = (accumA1I >> 16) & 0xFF;
+    data[3] = (accumA1I >> 24) & 0xFF;
+
+    data[4] = accumA1Q & 0xFF;
+    data[5] = (accumA1Q >> 8) & 0xFF;
+    data[6] = (accumA1Q >> 16) & 0xFF;
+    data[7] = (accumA1Q >> 24) & 0xFF;
+
+    data[8] = accumB1I & 0xFF;
+    data[9] = (accumB1I >> 8) & 0xFF;
+    data[10] = (accumB1I >> 16) & 0xFF;
+    data[11] = (accumB1I >> 24) & 0xFF;
+
+    data[12] = accumB1Q & 0xFF;
+    data[13] = (accumB1Q >> 8) & 0xFF;
+    data[14] = (accumB1Q >> 16) & 0xFF;
+    data[15] = (accumB1Q >> 24) & 0xFF;
+}
+
+

@@ -1,0 +1,7 @@
+1633950448012	Delete resource 'adc_ex11_multiple_soc_epwm/sine_gen'
+1633950452786	Delete resource 'adc_ex11_multiple_soc_epwm/sine_wave_gen'
+1633964698468	Delete resource 'spi_ex2_loopback_fifo_interrupts'
+1634032130494	Delete resource 'sci_ex1_loopback'
+1634032135914	Delete resource 'sci_ex3_echoback'
+1634040568315	Delete resource 'gpio_ex2_toggle'
+1634040574349	Delete resource 'led_ex1_blinky'

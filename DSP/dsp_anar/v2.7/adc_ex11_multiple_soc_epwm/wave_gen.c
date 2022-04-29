@@ -1,0 +1,30 @@
+#include "math.h"
+#include "device.h"
+
+void sinGen (int16_t signal[], int f, int len, int Fs){
+//	float t = (float)f/(float)Fs; // f * delta t
+	float t = 0.02; // 6250 / 500000 not working as in the line above?? set for 10kHz
+	int i;
+	for(i=0;i<len;i++)
+		signal[i] = round(1000.0*sin(2.0*M_PI*i*t));
+	//signal[0] = 1000.0*t; //debug
+}
+
+void cosGen (int16_t signal[], int f, int len, int Fs){
+//	float t = f/(float)Fs; // f * delta t
+	float t = 0.02;
+	int i;
+	for(i=0;i<len;i++)
+		signal[i] = round(1000.0*cos(2.0*M_PI*i*t));
+}
+
+
+void sinGenX (int16_t signal[], int len, int A, int P){
+//  float t = (float)f/(float)Fs; // f * delta t
+    float t = 0.0125; // 6250 / 500000 not working as in the line above??
+    float phase = ((float)P*M_PI)/180.0;
+    int i;
+    for(i=0;i<len;i++)
+        signal[i] = round(((float)A)*sin(2.0*M_PI*i*t + phase));
+    //signal[0] = 1000.0*t; //debug
+}

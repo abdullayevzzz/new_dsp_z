@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;adc_ex11_multiple_soc_epwm&apos; to &apos;adc_ex11_multiple_soc_epwm2&apos;" description="Rename resource &apos;adc_ex11_multiple_soc_epwm&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="/adc_ex11_multiple_soc_epwm" name="adc_ex11_multiple_soc_epwm2" stamp="1638287359480" updateReferences="true"/>
+</session>
