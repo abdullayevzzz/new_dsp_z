@@ -213,6 +213,8 @@ void main(void)
     GPIO_setDirectionMode(67, GPIO_DIR_MODE_OUT);    // GPIO34 = output
     GPIO_writePin(67, 1);
 
+
+    // 5V enable
     GPIO_setPadConfig(1, GPIO_PIN_TYPE_PULLUP);     // Enable pull-up on GPIO34
     GPIO_setPinConfig(GPIO_1_GPIO1);               // GPIO34 = GPIO34
     GPIO_setDirectionMode(1, GPIO_DIR_MODE_OUT);    // GPIO34 = output
