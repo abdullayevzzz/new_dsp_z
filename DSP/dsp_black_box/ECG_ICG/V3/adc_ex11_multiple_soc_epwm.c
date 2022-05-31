@@ -44,7 +44,7 @@ void sigGen (int16_t signal[], int f, int len, char s); // f in kHz, s = 's' for
 //void cosGen (int16_t signal[], int f, int len, int Fs);
 //void sinGenX (int16_t signal[], int len, int A, int P);
 //extern void pack [char data[], int32_t  accumA1I[], int32_t  accumA1Q[], int32_t  accumB1I[], int32_t  accumB1Q[]];
-void pack (uint8_t* data, volatile uint16_t *packetNumber, int32_t  *accumA1I, int32_t  *accumA1Q, int32_t  *accumB1I, int32_t  *accumB1Q, uint32_t *accumC,  char *mode);
+void pack (uint8_t* data, volatile uint16_t *packetNumber, int32_t  *accumA1I, int32_t  *accumA1Q, int32_t  *accumB1I, int32_t  *accumB1Q, volatile uint32_t *accumC,  char *mode);
 extern int32_t _dmac (int16_t *x1, int16_t *x2, int16_t count1, int16_t
 rsltBitShift);
 //#include "board.h"// ? from chopper example 'init_board()
@@ -65,7 +65,7 @@ rsltBitShift);
 uint16_t adcAResult;
 uint16_t adcBResult;
 uint32_t adcCResult = 0;
-
+volatile uint32_t  accumC = 0;  //accumulate ECG data
 
 int16_t adcAResults[BUFLEN] = {0};
 int16_t adcBResults[BUFLEN] = {0};
@@ -302,7 +302,6 @@ void main(void)
         static int32_t  accumA1Q = 0; //accumulate excitation signal 1 quadrature component
         static int32_t  accumB1I = 0; //accumulate response signal 1 in phase component
         static int32_t  accumB1Q = 0; //accumulate response signal 1 quadrature component
-        static uint32_t  accumC = 0;  //accumulate ECG data
 
         if (halfFilled == 1) //wait until half buffer to fill
         {
@@ -316,32 +315,22 @@ void main(void)
 
         if (fullFilled == 1) //wait until full buffer to fill
         {
+            //do the impedance calculation
             accumA1I += _dmac(signal1sin+BUFLEN/2,adcAResults+BUFLEN/2,BUFLEN/20-1,0);  //half of BUFLEN/5 (5 rpt calculates up to BUFLEN/2)
             accumA1Q += _dmac(signal1cos+BUFLEN/2,adcAResults+BUFLEN/2,BUFLEN/20-1,0);
             accumB1I += _dmac(signal1sin+BUFLEN/2,adcBResults+BUFLEN/2,BUFLEN/20-1,0);
             accumB1Q += _dmac(signal1cos+BUFLEN/2,adcBResults+BUFLEN/2,BUFLEN/20-1,0);
-            accumC = adcCResult>>9; //sum of 500 samples - divided by 512
-        }
 
-        if (fullFilled == 1) {
-        //do the impedance calculation
-        //send result
-        pack (data, &packetNumber, &accumA1I, &accumA1Q, &accumB1I, &accumB1Q, &accumC, &mode);
+            //send result
+            pack (data, &packetNumber, &accumA1I, &accumA1Q, &accumB1I, &accumB1Q, &accumC, &mode);
 
-        //  SCI_writeCharArray(SCIA_BASE, data, 12); //replace with non-blocking code
-        int j;
-        for (j=0; j<14; j++){
-            HWREGH(SCIA_BASE + SCI_O_TXBUF) = data[j];
-        }
+            //  SCI_writeCharArray(SCIA_BASE, data, 12); //replace with non-blocking code
+            int j;
+            for (j=0; j<14; j++){
+                HWREGH(SCIA_BASE + SCI_O_TXBUF) = data[j];
+            }
 
-
-          //comment out for test
-        accumA1I = 0; // to start again or to continue? If continue it will overflow eventually
-        accumA1Q = 0;
-        accumB1I = 0;
-        accumB1Q = 0;
-
-        fullFilled = 0;
+            fullFilled = 0;
         }
 
         if(SCI_getRxFIFOStatus(SCIA_BASE) != SCI_FIFO_RX0){
@@ -485,7 +474,7 @@ __interrupt void adcA1ISR(void)
 
     adcAResult = ADC_readResult(ADCARESULT_BASE, ADC_SOC_NUMBER2);
     adcBResult = ADC_readResult(ADCBRESULT_BASE, ADC_SOC_NUMBER2);
-    adcCResult += ADC_readResult(ADCCRESULT_BASE, ADC_SOC_NUMBER2);
+    adcCResult += (ADC_readResult(ADCCRESULT_BASE, ADC_SOC_NUMBER2) >> 1Ul);
 
     //uint16_t test = ADC_readResult(ADCCRESULT_BASE, ADC_SOC_NUMBER2);
     //
@@ -509,21 +498,22 @@ __interrupt void adcA1ISR(void)
    }
 
    if (PCB==1){
-       adcAResults[counter]=(adcAResult>>1); //
-       adcBResults[counter]=(adcBResult>>1); //
+       adcAResults[counter]=(adcAResult>>1Ul); //
+       adcBResults[counter]=(adcBResult>>1Ul); //
        //adcCResults[counter]=(adcCResult>>1); //
        counter++;
    }
 
     //static unsigned char *msg;
-    if (counter+1 == BUFLEN/2){
+    if (counter == BUFLEN/2 - 1){
         halfFilled = 1;
      }
 
-    if (counter+1 > BUFLEN){
+    if (counter > BUFLEN - 1){
         fullFilled = 1;
         counter = 0;
         packetNumber++;
+        accumC = adcCResult>>9UL; //sum of 500 samples - divided by 512
         adcCResult = 0;
     }
 
