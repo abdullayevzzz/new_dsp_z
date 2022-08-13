@@ -126,7 +126,7 @@ print ("Serial interface is open\n")
 f = open('log.csv', 'w+', newline='')
 writer = csv.writer(f)
 
-ser = serial.Serial('COM12', 230400, timeout=1)
+ser = serial.Serial('COM8', 230400, timeout=1)
 ser.flush()
 #readByte = ser.read(1)
 buffer = ser.read(14)

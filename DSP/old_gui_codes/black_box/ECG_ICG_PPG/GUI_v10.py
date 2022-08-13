@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from matplotlib.widgets import Button
 from matplotlib.widgets import CheckButtons
 
-fulLen = 500 #default mags_aver list length
+fulLen = 1000 #default mags_aver list length
 halfLen = fulLen/2
 
 DC = 0  #default dc value
@@ -126,7 +126,7 @@ print ("Serial interface is open\n")
 f = open('log.csv', 'w+', newline='')
 writer = csv.writer(f)
 
-ser = serial.Serial('COM6', 460800, timeout=1)
+ser = serial.Serial('COM8', 460800, timeout=1)
 ser.flush()
 #readByte = ser.read(1)
 buffer = ser.read(14)
@@ -145,8 +145,8 @@ mags = [0] * fulLen
 j = 0
 
 
-freq = 1 #(10^freq-1)kHz default frequency
-ser.write(b'1')
+freq = 3 #(10^freq-1)kHz default frequency
+ser.write(b'3')
 #ser.write(chr(freq))
 mes = ['Default excitation signal frequency is ' + str(10**(freq-1)) + 'kHz']
 print(mes)
