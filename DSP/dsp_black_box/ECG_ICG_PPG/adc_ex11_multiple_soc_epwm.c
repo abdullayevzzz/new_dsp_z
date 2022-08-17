@@ -392,20 +392,23 @@ void main(void)
                 case '1': //200Hz
                     sigGen(signal1sin,1,BUFLEN, 's');
                     sigGen(signal1cos,1,BUFLEN, 'c');
+                    EPWM_setClockPrescaler(myEPWMk_BASE, EPWM_CLOCK_DIVIDER_2, EPWM_HSCLOCK_DIVIDER_1);
                     EPWM_setTimeBasePeriod(myEPWMk_BASE, EPWM_TIMER_TBPRD2*10);
                     EPWM_setCounterCompareValue(myEPWMk_BASE, EPWM_COUNTER_COMPARE_A, EPWM_TIMER_TBPRD2*5);
                     break;
                 case '2': //2kHz
                     sigGen(signal1sin,10,BUFLEN, 's');
                     sigGen(signal1cos,10,BUFLEN, 'c');
+                    EPWM_setClockPrescaler(myEPWMk_BASE, EPWM_CLOCK_DIVIDER_2, EPWM_HSCLOCK_DIVIDER_1);
                     EPWM_setTimeBasePeriod(myEPWMk_BASE, EPWM_TIMER_TBPRD2);
                     EPWM_setCounterCompareValue(myEPWMk_BASE, EPWM_COUNTER_COMPARE_A, EPWM_TIMER_TBPRD2/2);
                     break;
                 case '3': //20kHz
                     sigGen(signal1sin,100,BUFLEN, 's');
                     sigGen(signal1cos,100,BUFLEN, 'c');
-                    EPWM_setTimeBasePeriod(myEPWMk_BASE, EPWM_TIMER_TBPRD2/10);
-                    EPWM_setCounterCompareValue(myEPWMk_BASE, EPWM_COUNTER_COMPARE_A, (EPWM_TIMER_TBPRD2/10)>>1); // divide by 20
+                    EPWM_setClockPrescaler(myEPWMk_BASE, EPWM_CLOCK_DIVIDER_1, EPWM_HSCLOCK_DIVIDER_1);
+                    EPWM_setTimeBasePeriod(myEPWMk_BASE, EPWM_TIMER_TBPRD2/5);
+                    EPWM_setCounterCompareValue(myEPWMk_BASE, EPWM_COUNTER_COMPARE_A, EPWM_TIMER_TBPRD2/10);
                     break;
             }
         }
