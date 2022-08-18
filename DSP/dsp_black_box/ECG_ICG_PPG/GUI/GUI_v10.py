@@ -80,6 +80,8 @@ def stop(event):
 def log(event):
     global logFlag
     logFlag = 1
+    header0 = ['ICG','ICG_Filtered','ECG','ECG_Filtered','PPG']
+    writer.writerow(header0)   
     
 def DC_AC(event):
     pass
@@ -155,8 +157,10 @@ i = 0
 
 ICG = [0] * fulLen
 ICG_filt = [0] * fulLen
+ICG_prev = [0] * 4
 ECG = [0] * fulLen
 ECG_filt = [0] * fulLen
+ECG_prev = [0] * 4
 PPG = [0] * fulLen
 j = 0
 
@@ -171,7 +175,7 @@ mode = 'e' #default mode
 ser.write(b'e')
 ser.read(1400)
 
-header1 = ['ICG', 'ICG_filt', 'ECG', 'ECG_Filtered', 'PPG']
+header1 = ['ICG', 'ICG_Filtered', 'ECG', 'ECG_Filtered', 'PPG']
 print(header1)
 
 while not keyboard.is_pressed("s"):
@@ -206,17 +210,18 @@ while not keyboard.is_pressed("s"):
                 j = 0
                 ECG_filt = ECG.copy()
                 ICG_filt = ICG.copy()
-                if (filter_50_mode):
-                    #ECG_aver = signal.filtfilt(b50, a50, ECG_aver) #50Hz remove
-                    for m in range ((fulLen)-4):
-                        ECG_filt[m]  = (ECG[m] + ECG[m+1] + ECG[m+2] + ECG[m+3])/4
-                        ICG_filt[m]  = (ICG[m] + ICG[m+1] + ICG[m+2] + ICG[m+3])/4
-                        #leave end case
+                ECG_filt = ECG_prev + ECG_filt # concatanate previous four values to the current list
+                ICG_filt = ICG_prev + ICG_filt
+                if (filter_50_mode):                 
+                    for m in range (0,fulLen):
+                        ECG_filt[m]  = sum(ECG_filt[m:m+4])/4
+                        ICG_filt[m]  = sum(ICG_filt[m:m+4])/4
                 if (filter_100_mode):
-                    for m in range ((fulLen)-2):
-                        ECG_filt[m]  = (ECG[m] + ECG[m+1])/2
-                        ICG_filt[m]  = (ICG[m] + ICG[m+1])/2
-                        #leave end case
+                    for m in range (0,fulLen):
+                        ECG_filt[m]  = sum(ECG_filt[m:m+2])/2
+                        ICG_filt[m]  = sum(ICG_filt[m:m+2])/2
+                ECG_prev = ECG[fulLen-4:fulLen].copy()  # save last 4 values. prepare for next iteration
+                ICG_prev = ICG[fulLen-4:fulLen].copy()
                 
                 if (logFlag):
                     for r in range (fulLen):
@@ -251,17 +256,18 @@ while not keyboard.is_pressed("s"):
                 j = 0
                 ECG_filt = ECG.copy()
                 ICG_filt = ICG.copy()
-                if (filter_50_mode):
-                    #ECG_aver = signal.filtfilt(b50, a50, ECG_aver) #50Hz remove
-                    for m in range ((fulLen)-4):
-                        ECG_filt[m]  = (ECG[m] + ECG[m+1] + ECG[m+2] + ECG[m+3])/4
-                        ICG_filt[m]  = (ICG[m] + ICG[m+1] + ICG[m+2] + ICG[m+3])/4
-                        #leave end case
+                ECG_filt = ECG_prev + ECG_filt # concatanate previous four values to the current list
+                ICG_filt = ICG_prev + ICG_filt
+                if (filter_50_mode):                 
+                    for m in range (0,fulLen):
+                        ECG_filt[m]  = sum(ECG_filt[m:m+4])/4
+                        ICG_filt[m]  = sum(ICG_filt[m:m+4])/4
                 if (filter_100_mode):
-                    for m in range ((fulLen)-2):
-                        ECG_filt[m]  = (ECG[m] + ECG[m+1])/2
-                        ICG_filt[m]  = (ICG[m] + ICG[m+1])/2
-                        #leave end case
+                    for m in range (0,fulLen):
+                        ECG_filt[m]  = sum(ECG_filt[m:m+2])/2
+                        ICG_filt[m]  = sum(ICG_filt[m:m+2])/2
+                ECG_prev = ECG[fulLen-4:fulLen].copy()  # save last 4 values. prepare for next iteration
+                ICG_prev = ICG[fulLen-4:fulLen].copy()
 
                 
                 if (logFlag):
