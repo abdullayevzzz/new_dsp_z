@@ -19,8 +19,8 @@ DC = 0  #default dc value
 DC_len = 50 #Length of hysteresis to calculate dc. Must be smaller than fulLen/4
 AC_flag = False
 
-filter_50_mode = 1
-filter_100_mode = 1
+filter_50_mode = True
+filter_100_mode = True
 
 mode_button = 'e' #default mode
 freq_button = 3 #(20*10^freq)Hz default frequency
@@ -50,9 +50,9 @@ def filters(labels):
     global filter_50_mode
     global filter_100_mode    
     if (labels == '50Hz'):
-        filter_50_mode = ~filter_50_mode
+        filter_50_mode = not filter_50_mode
     if (labels == '100Hz'):
-        filter_100_mode = ~filter_100_mode
+        filter_100_mode = not filter_100_mode
 
 
 def mode_d(event):
@@ -272,7 +272,6 @@ while not keyboard.is_pressed("s"):
                         ICG_filt[m]  = sum(ICG_filt[m:m+2])/2
                 ECG_prev = ECG[fulLen-4:fulLen].copy()  # save last 4 values. prepare for next iteration
                 ICG_prev = ICG[fulLen-4:fulLen].copy()
-
                 
                 if (logFlag):
                     for r in range (fulLen):
