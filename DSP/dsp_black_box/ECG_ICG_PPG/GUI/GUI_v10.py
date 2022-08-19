@@ -7,6 +7,7 @@ import cmath
 import math
 import csv
 import struct
+import time
 from matplotlib import pyplot as plt
 from matplotlib.widgets import Button
 from matplotlib.widgets import CheckButtons
@@ -127,7 +128,10 @@ b9.on_clicked(log)
 
 
 print ("Serial interface is open")
-f = open('log.csv', 'w+', newline='')
+
+#new log file
+timestr = time.strftime("%Y%m%d_%H%M%S")
+f = open('log_' + timestr + '.csv', 'w+', newline='')
 writer = csv.writer(f)
 
 

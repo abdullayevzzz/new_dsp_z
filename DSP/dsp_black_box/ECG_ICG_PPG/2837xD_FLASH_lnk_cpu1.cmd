@@ -76,7 +76,7 @@ SECTIONS
 {
    /* Allocate program areas: */
    .cinit              : > FLASHA | FLASHB      PAGE = 0, ALIGN(8)
-   .text               : >> FLASHB | FLASHC | FLASHD | FLASHE | FLASHF | FLASHG | FLASHH | FLASHI    PAGE = 0, ALIGN(8)
+   .text               : >> FLASHD | FLASHE | FLASHF | FLASHG | FLASHH | FLASHI | FLASHJ | FLASHK    PAGE = 0, ALIGN(8)
    codestart           : > BEGIN       PAGE = 0, ALIGN(8)
    /* Allocate uninitalized data sections: */
    .stack              : > RAMM1       PAGE = 1
@@ -85,7 +85,7 @@ SECTIONS
 
 #if defined(__TI_EABI__)
    .init_array         : > FLASHB,       PAGE = 0,       ALIGN(8)
-   .bss                : > RAMLS5 | RAMGS0,       PAGE = 1
+   .bss                : > RAMLS5 | RAMGS0 | RAMGS1,       PAGE = 1
    .bss:output         : > RAMLS3,       PAGE = 0
    .bss:cio            : > RAMLS5,       PAGE = 1
    .data               : > RAMLS5,       PAGE = 1

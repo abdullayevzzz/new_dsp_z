@@ -458,11 +458,11 @@ void initEPWM_ADC(void)
     EPWM_setADCTriggerEventPrescale(EPWM_FOR_ADC_BASE , EPWM_SOC_B, 1);
 
     // by trial and fail 100kHz sampling rate is obtained by these values
-    EPWM_setCounterCompareValue(EPWM_FOR_ADC_BASE , EPWM_COUNTER_COMPARE_B, 125);
-    EPWM_setTimeBasePeriod(EPWM_FOR_ADC_BASE , 249);
+    EPWM_setCounterCompareValue(EPWM_FOR_ADC_BASE , EPWM_COUNTER_COMPARE_B, 500);
+    EPWM_setTimeBasePeriod(EPWM_FOR_ADC_BASE , 999);
 
     // Set the local ePWM module clock divider to /1
-    EPWM_setClockPrescaler(EPWM_FOR_ADC_BASE , EPWM_CLOCK_DIVIDER_4,  EPWM_HSCLOCK_DIVIDER_1);
+    EPWM_setClockPrescaler(EPWM_FOR_ADC_BASE , EPWM_CLOCK_DIVIDER_1,  EPWM_HSCLOCK_DIVIDER_1);
 
     // Freeze the counter
     EPWM_setTimeBaseCounterMode(EPWM_FOR_ADC_BASE , EPWM_COUNTER_MODE_STOP_FREEZE);
