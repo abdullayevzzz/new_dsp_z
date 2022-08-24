@@ -1,6 +1,7 @@
 refRes = complex(1000.0, 0.0) #reference resistor OHM
 from scipy import signal
 import serial
+import serial.tools.list_ports
 import keyboard
 import cmath
 import math
@@ -126,7 +127,21 @@ print ("Serial interface is open\n")
 f = open('log.csv', 'w+', newline='')
 writer = csv.writer(f)
 
-ser = serial.Serial('COM8', 230400, timeout=1)
+#Automatic port finder
+port_name = ''
+ports = list(serial.tools.list_ports.comports())
+for p in ports:
+    if 'XDS100' in p[1]:
+        print("Device found")
+        port_name = p[0]
+        global ser
+        ser = serial.Serial(port_name, 460800, timeout=1)
+        break
+        
+if not ser:
+    print ("Defice not found")
+    exit()
+    
 ser.flush()
 #readByte = ser.read(1)
 buffer = ser.read(14)
