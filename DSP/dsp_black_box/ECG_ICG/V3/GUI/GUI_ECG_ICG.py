@@ -7,6 +7,7 @@ import cmath
 import math
 import csv
 import struct
+import time
 from matplotlib import pyplot as plt
 from matplotlib.widgets import Button
 from matplotlib.widgets import CheckButtons
@@ -24,7 +25,7 @@ filter_100_mode = True
 mode_button = 'e' #default mode
 freq_button = 2 #(10^freq-1)kHz default frequency
 
-logFlag = 0
+logFlag = False
 
 plt.figure(figsize=(8,6), dpi=100)
 axA = plt.axes([0.1, 0.80, 0.8, 0.15])
@@ -79,9 +80,20 @@ def stop(event):
     
 def log(event):
     global logFlag
-    logFlag = 1
-    header0 = ['ICG','ECG','ECG_Filtered']
-    writer.writerow(header0) 
+    global writer
+    logFlag = not logFlag
+    if logFlag:
+        f = open('log_' + timestr + '.csv', 'w+', newline='')
+        writer = csv.writer(f)
+        header0 = ['ICG','ECG','ECG_Filtered']
+        writer.writerow(header0)
+    else:
+        try:
+            f
+        except NameError:
+            pass
+        else:
+            f.close()
     
 def DC_AC(event):
     global AC_flag
@@ -125,9 +137,10 @@ b9 = Button(ax9, 'Log',color="yellow")
 b9.on_clicked(log)
 
 
-print ("Serial interface is open\n")
-f = open('log.csv', 'w+', newline='')
-writer = csv.writer(f)
+#new log file
+#timestr = time.strftime("%Y%m%d_%H%M%S")
+#f = open('log_' + timestr + '.csv', 'w+', newline='')
+#writer = csv.writer(f)
 
 #Automatic port finder
 port_name = ''
@@ -141,7 +154,7 @@ for p in ports:
         break
         
 if not ser:
-    print ("Defice not found")
+    print ("Device not found")
     exit()
     
 ser.flush()
@@ -363,6 +376,5 @@ while not keyboard.is_pressed("s"):
     ser.read(i) #throw away until next syncronisation
     if (i > 0 and j > 0):  #synconization issue
         j = j-1
- 
-f.close()      
+      
 input('Press enter to exit')
