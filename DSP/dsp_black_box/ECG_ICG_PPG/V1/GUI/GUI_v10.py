@@ -25,7 +25,7 @@ filter_100_mode = True
 mode_button = 'e' #default mode
 freq_button = 3 #(20*10^freq)Hz default frequency
 
-logFlag = 0
+logFlag = False
 
 plt.figure(figsize=(8,6), dpi=100)
 axA = plt.axes([0.1, 0.80, 0.8, 0.15])
@@ -78,11 +78,29 @@ def freq_3(event):
 def stop(event):
     quit()
     
-def log(event):
+def log_old(event):
     global logFlag
     logFlag = 1
     header0 = ['ICG','ICG_Filtered','ECG','ECG_Filtered','PPG']
-    writer.writerow(header0)   
+    writer.writerow(header0)
+
+def log(event):
+    global logFlag
+    global writer
+    logFlag = not logFlag
+    if logFlag:
+        f = open('log_' + timestr + '.csv', 'w+', newline='')
+        writer = csv.writer(f)
+        header0 = ['ICG','ECG','ECG_Filtered']
+        writer.writerow(header0)
+    else:
+        try:
+            f
+        except NameError:
+            pass
+        else:
+            f.close()
+   
     
 def DC_AC(event):
     pass
@@ -130,9 +148,9 @@ b9.on_clicked(log)
 print ("Serial interface is open")
 
 #new log file
-timestr = time.strftime("%Y%m%d_%H%M%S")
-f = open('log_' + timestr + '.csv', 'w+', newline='')
-writer = csv.writer(f)
+#timestr = time.strftime("%Y%m%d_%H%M%S")
+#f = open('log_' + timestr + '.csv', 'w+', newline='')
+#writer = csv.writer(f)
 
 
 #Automatic port finder
@@ -340,6 +358,5 @@ while not keyboard.is_pressed("s"):
             plt.pause(0.1)
     
     i = 0
- 
-f.close()      
+      
 input('Press enter to exit')
