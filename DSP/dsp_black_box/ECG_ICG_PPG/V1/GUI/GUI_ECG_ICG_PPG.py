@@ -78,12 +78,6 @@ def freq_3(event):
 def stop(event):
     quit()
     
-def log_old(event):
-    global logFlag
-    logFlag = 1
-    header0 = ['ICG','ICG_Filtered','ECG','ECG_Filtered','PPG']
-    writer.writerow(header0)
-
 def log(event):
     global logFlag
     global writer
@@ -146,11 +140,6 @@ b9.on_clicked(log)
 
 
 print ("Serial interface is open")
-
-#new log file
-#timestr = time.strftime("%Y%m%d_%H%M%S")
-#f = open('log_' + timestr + '.csv', 'w+', newline='')
-#writer = csv.writer(f)
 
 
 #Automatic port finder
