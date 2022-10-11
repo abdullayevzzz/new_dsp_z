@@ -83,6 +83,7 @@ def log(event):
     global writer
     logFlag = not logFlag
     if logFlag:
+        timestr = time.strftime("%Y%m%d_%H%M%S")
         f = open('log_' + timestr + '.csv', 'w+', newline='')
         writer = csv.writer(f)
         header0 = ['ICG','ECG','ECG_Filtered']
@@ -94,6 +95,7 @@ def log(event):
             pass
         else:
             f.close()
+            writer.close()
     
 def DC_AC(event):
     global AC_flag
@@ -136,11 +138,6 @@ ax9 = plt.axes([0.55, 0.02, 0.1, 0.1])
 b9 = Button(ax9, 'Log',color="yellow")
 b9.on_clicked(log)
 
-
-#new log file
-#timestr = time.strftime("%Y%m%d_%H%M%S")
-#f = open('log_' + timestr + '.csv', 'w+', newline='')
-#writer = csv.writer(f)
 
 #Automatic port finder
 port_name = ''
