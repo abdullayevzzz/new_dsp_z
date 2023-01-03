@@ -14,6 +14,24 @@ PAGE 0 :
    RAMLS4           : origin = 0x00A000, length = 0x000800
    RESET            : origin = 0x3FFFC0, length = 0x000002
 
+  /* Flash sectors */
+   FLASHA           : origin = 0x080002, length = 0x001FFE	/* on-chip Flash */
+   FLASHB           : origin = 0x082000, length = 0x002000	/* on-chip Flash */
+   FLASHC           : origin = 0x084000, length = 0x002000	/* on-chip Flash */
+   FLASHD           : origin = 0x086000, length = 0x002000	/* on-chip Flash */
+   FLASHE           : origin = 0x088000, length = 0x008000	/* on-chip Flash */
+   FLASHF           : origin = 0x090000, length = 0x008000	/* on-chip Flash */
+   FLASHG           : origin = 0x098000, length = 0x008000	/* on-chip Flash */
+   FLASHH           : origin = 0x0A0000, length = 0x008000	/* on-chip Flash */
+   FLASHI           : origin = 0x0A8000, length = 0x008000	/* on-chip Flash */
+   FLASHJ           : origin = 0x0B0000, length = 0x008000	/* on-chip Flash */
+   FLASHK           : origin = 0x0B8000, length = 0x002000	/* on-chip Flash */
+   FLASHL           : origin = 0x0BA000, length = 0x002000	/* on-chip Flash */
+   FLASHM           : origin = 0x0BC000, length = 0x002000	/* on-chip Flash */
+   FLASHN           : origin = 0x0BE000, length = 0x001FF0	/* on-chip Flash */
+
+//   FLASHN_RSVD     : origin = 0x0BFFF0, length = 0x000010    /* Reserve and do not use for code as per the errata advisory "Memory: Prefetching Beyond Valid Memory" */
+
 PAGE 1 :
 
    BOOT_RSVD       : origin = 0x000002, length = 0x000121     /* Part of M0, BOOT rom will use this for stack */
@@ -59,7 +77,7 @@ PAGE 1 :
 SECTIONS
 {
    codestart        : > BEGIN,     PAGE = 0
-   .text            : >> RAMGS2| RAMGS3 | RAMGS4 | RAMGS5 | RAMGS6 | RAMGS7 | RAMGS8 | RAMGS9 | RAMGS10,   PAGE = 1
+   .text            : >> RAMD0 |  RAMLS0 | RAMLS1 | RAMLS2 | RAMLS3 | RAMLS4,   PAGE = 0
    .cinit           : > RAMM0,     PAGE = 0
    .switch          : > RAMM0,     PAGE = 0
    .reset           : > RESET,     PAGE = 0, TYPE = DSECT /* not used, */
@@ -70,7 +88,7 @@ SECTIONS
    .bss:output      : > RAMLS3,    PAGE = 0
    .init_array      : > RAMM0,     PAGE = 0
    .const           : > RAMLS5,    PAGE = 1
-   .data            : > RAMGS2 |  RAMGS3 |  RAMGS4,    PAGE = 1
+   .data            : > RAMLS5,    PAGE = 1
    .sysmem          : > RAMLS5,    PAGE = 1
 #else
    .pinit           : > RAMM0,     PAGE = 0

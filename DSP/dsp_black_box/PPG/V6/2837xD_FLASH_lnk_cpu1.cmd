@@ -75,8 +75,8 @@ PAGE 1 : /* Data Memory */
 SECTIONS
 {
    /* Allocate program areas: */
-   .cinit              : > FLASHA | FLASHB      PAGE = 0, ALIGN(8)
-   .text               : >> FLASHD | FLASHE | FLASHF | FLASHG | FLASHH | FLASHI | FLASHJ | FLASHK    PAGE = 0, ALIGN(8)
+   .cinit              : > FLASHB      PAGE = 0, ALIGN(8)
+   .text               : >> FLASHB | FLASHC | FLASHD | FLASHE      PAGE = 0, ALIGN(8)
    codestart           : > BEGIN       PAGE = 0, ALIGN(8)
    /* Allocate uninitalized data sections: */
    .stack              : > RAMM1       PAGE = 1
@@ -85,20 +85,20 @@ SECTIONS
 
 #if defined(__TI_EABI__)
    .init_array         : > FLASHB,       PAGE = 0,       ALIGN(8)
-   .bss                : > RAMLS5 | RAMGS0 | RAMGS1,       PAGE = 1
+   .bss                : > RAMLS5,       PAGE = 1
    .bss:output         : > RAMLS3,       PAGE = 0
    .bss:cio            : > RAMLS5,       PAGE = 1
    .data               : > RAMLS5,       PAGE = 1
    .sysmem             : > RAMLS5,       PAGE = 1
    /* Initalized sections go in Flash */
-   .const              : > FLASHM,       PAGE = 0,       ALIGN(8)
+   .const              : > FLASHF,       PAGE = 0,       ALIGN(8)
 #else
    .pinit              : > FLASHB,       PAGE = 0,       ALIGN(8)
    .ebss               : >> RAMLS5 | RAMGS0 | RAMGS1,    PAGE = 1
    .esysmem            : > RAMLS5,       PAGE = 1
    .cio                : > RAMLS5,       PAGE = 1
    /* Initalized sections go in Flash */
-   .econst             : >> FLASHM      PAGE = 0, ALIGN(8)
+   .econst             : >> FLASHF      PAGE = 0, ALIGN(8)
 #endif
 
    Filter_RegsFile     : > RAMGS0,	   PAGE = 1

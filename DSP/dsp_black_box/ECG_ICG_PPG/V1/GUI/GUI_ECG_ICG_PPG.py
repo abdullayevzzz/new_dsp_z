@@ -83,6 +83,7 @@ def log(event):
     global writer
     logFlag = not logFlag
     if logFlag:
+        timestr = time.strftime("%Y%m%d_%H%M%S")
         f = open('log_' + timestr + '.csv', 'w+', newline='')
         writer = csv.writer(f)
         header0 = ['ICG','ECG','ECG_Filtered']

@@ -26,24 +26,33 @@ void setup(){
     bitMask(MAX30105_FIFOCONFIG, MAX30105_SAMPLEAVG_MASK, MAX30105_SAMPLEAVG_8);
     //enable fifo rollover
     bitMask(MAX30105_FIFOCONFIG, MAX30105_ROLLOVER_MASK, MAX30105_ROLLOVER_ENABLE);
-    //activate LEDs, other options: MAX30105_MODE_REDONLY, MAX30105_MODE_REDIRONLY, MAX30105_MODE_MULTILED
-    bitMask(MAX30105_MODECONFIG, MAX30105_MODE_MASK, MAX30105_MODE_REDONLY);
+    //activate LEDs, other options: MAX30105_MODE_REDONLY, MAX30105_MODE_REDIRONLY
+//--olev
+    //-- bitMask(MAX30105_MODECONFIG, MAX30105_MODE_MASK, MAX30105_MODE_REDONLY);
+    bitMask(MAX30105_MODECONFIG, MAX30105_MODE_MASK, MAX30105_MODE_MULTILED);
     //set adc range, one of MAX30105_ADCRANGE_2048, _4096, _8192, _16384
     bitMask(MAX30105_PARTICLECONFIG, MAX30105_ADCRANGE_MASK, MAX30105_ADCRANGE_16384);
     //set sample rate: one of MAX30105_SAMPLERATE_50, _100, _200, _400, _800, _1000, _1600, _3200
-    bitMask(MAX30105_PARTICLECONFIG, MAX30105_SAMPLERATE_MASK, MAX30105_SAMPLERATE_3200);
+    bitMask(MAX30105_PARTICLECONFIG, MAX30105_SAMPLERATE_MASK, MAX30105_SAMPLERATE_1600);
     //set pulse width (us): one of MAX30105_PULSEWIDTH_69, _118, _215, _411
     bitMask(MAX30105_PARTICLECONFIG, MAX30105_PULSEWIDTH_MASK, MAX30105_PULSEWIDTH_118); //16 bit
     //set amplitude values for all leds and proximity: 0x00 = 0mA, 0x7F = 25.4mA, 0xFF = 50mA (typical)
-    writeRegister8(MAX30105_LED1_PULSEAMP, 0x7F); //8f
-    //writeRegister8(MAX30105_LED2_PULSEAMP, 0x0F);
-    //writeRegister8(MAX30105_LED3_PULSEAMP, 0x0F);
-    //writeRegister8(MAX30105_LED4_PULSEAMP, 0x0F); //connected to LED3, green led
+    writeRegister8(MAX30105_LED1_PULSEAMP, 0x2F);
+    writeRegister8(MAX30105_LED2_PULSEAMP, 0x2F);
+    writeRegister8(MAX30105_LED3_PULSEAMP, 0x2F);
+    writeRegister8(MAX30105_LED_PROX_AMP, 0x2F);
+
+
     //Multi-LED Mode Configuration, Enable the reading of the three LEDs
-    bitMask(MAX30105_MULTILEDCONFIG1, MAX30105_SLOT1_MASK, SLOT_RED_LED);
-    //bitMask(MAX30105_MULTILEDCONFIG1, MAX30105_SLOT2_MASK, SLOT_IR_LED << 4);
-    //bitMask(MAX30105_MULTILEDCONFIG2, MAX30105_SLOT3_MASK, SLOT_GREEN_LED);
-    //bitMask(MAX30105_MULTILEDCONFIG2, MAX30105_SLOT4_MASK, SLOT_GREEN_LED << 4);
+
+   // bitMask(MAX30105_MULTILEDCONFIG1, MAX30105_SLOT1_MASK, 0x07);
+
+
+   bitMask(MAX30105_MULTILEDCONFIG1, MAX30105_SLOT1_MASK, SLOT_RED_LED);
+   bitMask(MAX30105_MULTILEDCONFIG1, MAX30105_SLOT2_MASK, SLOT_IR_LED << 4);
+   bitMask(MAX30105_MULTILEDCONFIG2, MAX30105_SLOT3_MASK, SLOT_GREEN_LED);
+   // bitMask(MAX30105_MULTILEDCONFIG2, MAX30105_SLOT4_MASK, SLOT_GREEN_LED << 4);
+
     //enable PPG_RDY_EN
     bitMask(MAX30105_INTENABLE1, MAX30105_INT_DATA_RDY_MASK, MAX30105_INT_DATA_RDY_ENABLE);
 
@@ -58,21 +67,21 @@ uint32_t read_leds(records *led3){
 
     if (readPointer != writePointer){ // new data
         //Burst read three bytes - RED
-        readRegister(MAX30105_FIFODATA, *temp, 3); //read 3 bytes from FIFODATA register
+        readRegister9(MAX30105_FIFODATA, *temp); //read 3 bytes from FIFODATA register
         //Convert array to long
         memcpy(&tempLong, temp, sizeof(tempLong));
         tempLong &= 0x3FFFF; //Zero out all but 18 bits
         led3->red = tempLong;
 
         //Burst read three bytes - IR
-        readRegister(MAX30105_FIFODATA, *temp, 3); //read 3 bytes from FIFODATA register
+        readRegister9(MAX30105_FIFODATA, *temp); //read 3 bytes from FIFODATA register
         //Convert array to long
         memcpy(&tempLong, temp, sizeof(tempLong));
         tempLong &= 0x3FFFF; //Zero out all but 18 bits
         led3->ir = tempLong;
 
         //Burst read three bytes - GREEN
-        readRegister(MAX30105_FIFODATA, *temp, 3); //read 3 bytes from FIFODATA register
+        readRegister9(MAX30105_FIFODATA, *temp); //read 3 bytes from FIFODATA register
         //Convert array to long
         memcpy(&tempLong, temp, sizeof(tempLong));
         tempLong &= 0x3FFFF; //Zero out all but 18 bits
@@ -100,29 +109,20 @@ uint8_t newDataReady(void){
     return (readRegister8(MAX30105_INTSTAT1) & MAX30105_INT_DATA_RDY_ENABLE);
 }
 
-int8_t numOfNewSamples(void){
-    int8_t r = readRegister8(MAX30105_FIFOREADPTR);
-    int8_t w = readRegister8(MAX30105_FIFOWRITEPTR);
-    int8_t dif = w-r+1; //results by debugging. read and write is equal for the first data
-    if (dif < 0)
-       dif = dif + 32;
-    return dif;
-}
-
 uint8_t readRegister8(uint8_t reg){
-    DEVICE_DELAY_US(100);
+    DEVICE_DELAY_US(1000);
     I2C_setConfig(I2CA_BASE, (I2C_MASTER_SEND_MODE));
     I2C_setDataCount(I2CA_BASE, 1);
     I2C_putData(I2CA_BASE, reg); //
     I2C_sendStartCondition(I2CA_BASE);
-    DEVICE_DELAY_US(100);
+    DEVICE_DELAY_US(1000);
     I2C_setConfig(I2CA_BASE, (I2C_MASTER_RECEIVE_MODE));
     I2C_sendStartCondition(I2CA_BASE);
-    DEVICE_DELAY_US(100);
+    DEVICE_DELAY_US(1000);
     return I2C_getData(I2CA_BASE);
 }
 
-void readRegister(uint8_t reg, uint8_t result[], uint8_t num){
+void readRegister9(uint8_t reg, uint8_t temp[]){
     DEVICE_DELAY_US(100);
     I2C_setConfig(I2CA_BASE, (I2C_MASTER_SEND_MODE));
     I2C_setDataCount(I2CA_BASE, 1);
@@ -130,16 +130,36 @@ void readRegister(uint8_t reg, uint8_t result[], uint8_t num){
     I2C_sendStartCondition(I2CA_BASE);
     DEVICE_DELAY_US(100);
     I2C_setConfig(I2CA_BASE, (I2C_MASTER_RECEIVE_MODE));
-    I2C_setDataCount(I2CA_BASE, num);
+    I2C_setDataCount(I2CA_BASE, 3);
     I2C_sendStartCondition(I2CA_BASE);
     DEVICE_DELAY_US(100);
-    int i;
-    for (i=0; i<num; i++)
-        result[i] = I2C_getData(I2CA_BASE);
+    temp[0] = I2C_getData(I2CA_BASE);
+    temp[1] = I2C_getData(I2CA_BASE);
+    temp[2] = I2C_getData(I2CA_BASE);
 }
 
+// Olev 18
+void readRegister9x(uint8_t reg, uint8_t temp[]){
+    DEVICE_DELAY_US(100);
+    I2C_setConfig(I2CA_BASE, (I2C_MASTER_SEND_MODE));
+    I2C_setDataCount(I2CA_BASE, 1);
+    I2C_putData(I2CA_BASE, reg); //
+    I2C_sendStartCondition(I2CA_BASE);
+    DEVICE_DELAY_US(100);
+    I2C_setConfig(I2CA_BASE, (I2C_MASTER_RECEIVE_MODE));
+    I2C_setDataCount(I2CA_BASE, 9); //Olev: read 9 bytes
+    I2C_sendStartCondition(I2CA_BASE);
+    DEVICE_DELAY_US(100);
+    char k0;
+ for (k0=0; k0< 9; k0++) // 9 bytes //(+1 more needed??)
+   {
+     temp[k0] = I2C_getData(I2CA_BASE);
+     DEVICE_DELAY_US(50);
+   }
+}
+
+
 void writeRegister8(uint8_t reg, uint8_t value){
-    //while(!(I2C_getStatus(I2CA_BASE) & I2C_STS_BUS_BUSY));
     DEVICE_DELAY_US(100);
     I2C_setConfig(I2CA_BASE, (I2C_MASTER_SEND_MODE));
     I2C_setDataCount(I2CA_BASE, 2);

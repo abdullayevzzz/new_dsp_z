@@ -191,10 +191,10 @@ header2 = ['ICG', 'ECG', 'ECG_Filtered']
 
 if mode == 'd':
     print(header1)
-    writer.writerow(header1)
+    # writer.writerow(header1)
 elif mode == 'e':
     print(header2)
-    writer.writerow(header2)
+    # writer.writerow(header2)
 
 while not keyboard.is_pressed("s"):
     buffer = ser.read(14)

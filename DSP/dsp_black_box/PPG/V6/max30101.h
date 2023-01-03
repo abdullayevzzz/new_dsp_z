@@ -6,11 +6,10 @@ typedef struct record{
 } records;
 
 uint8_t readRegister8(uint8_t reg);
-void readRegister(uint8_t reg, uint8_t temp[], uint8_t num);
+void readRegister9(uint8_t reg, uint8_t temp[]);
 void writeRegister8(uint8_t reg, uint8_t value);
 void bitMask(uint8_t reg, uint8_t mask, uint8_t thing);
 uint8_t newDataReady(void);
-int8_t numOfNewSamples(void);
 uint32_t read_leds(records *led3);
 float temp();
 
@@ -33,7 +32,6 @@ static const uint8_t MAX30105_PARTICLECONFIG = 	0x0A;    // Note, sometimes list
 static const uint8_t MAX30105_LED1_PULSEAMP = 	0x0C;
 static const uint8_t MAX30105_LED2_PULSEAMP = 	0x0D;
 static const uint8_t MAX30105_LED3_PULSEAMP = 	0x0E;
-static const uint8_t MAX30105_LED4_PULSEAMP =   0x0F;
 static const uint8_t MAX30105_LED_PROX_AMP = 	0x10;
 static const uint8_t MAX30105_MULTILEDCONFIG1 = 0x11;
 static const uint8_t MAX30105_MULTILEDCONFIG2 = 0x12;
