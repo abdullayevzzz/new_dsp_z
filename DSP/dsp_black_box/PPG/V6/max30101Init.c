@@ -151,10 +151,10 @@ void readRegister9x(uint8_t reg, uint8_t temp[]){
     I2C_sendStartCondition(I2CA_BASE);
     DEVICE_DELAY_US(100);
     char k0;
- for (k0=0; k0< 9; k0++) // 9 bytes //(+1 more needed??)
+ for (k0=0; k0< 9; k0++) // 9 bytes
    {
      temp[k0] = I2C_getData(I2CA_BASE);
-     DEVICE_DELAY_US(50);
+     DEVICE_DELAY_US(20);
    }
 }
 

@@ -136,13 +136,13 @@ uint8_t  xrd1, xwr1,xrd2, xwr2;
 
     while (1)
     {
-    DEVICE_DELAY_US(200); // Olev
+    DEVICE_DELAY_US(20); // Olev
     if (newDataReady())
        {
 
  // olev,just for interest:  RD and WR pointers!
-     xrd1= readRegister8(MAX30105_FIFOREADPTR);
-     xwr1= readRegister8(MAX30105_FIFOWRITEPTR);
+     // xrd1= readRegister8(MAX30105_FIFOREADPTR);
+     // xwr1= readRegister8(MAX30105_FIFOWRITEPTR);
 
 // Olev
      readRegister9x(MAX30105_FIFODATA, data9); // read 3x3=9 bytes of data for 3 channels
@@ -153,9 +153,9 @@ uint8_t  xrd1, xwr1,xrd2, xwr2;
                 HWREGH(SCIA_BASE + SCI_O_TXBUF) = txdata[j]; //send data
 
 // olev, read again (just for interest):  RD and WR pointers!
-      xrd2= readRegister8(MAX30105_FIFOREADPTR);
-      xwr2= readRegister8(MAX30105_FIFOWRITEPTR);
+      // xrd2= readRegister8(MAX30105_FIFOREADPTR);
+      // xwr2= readRegister8(MAX30105_FIFOWRITEPTR);
        }
-        DEVICE_DELAY_US(1000);
+        //DEVICE_DELAY_US(1000);
     }
 }
