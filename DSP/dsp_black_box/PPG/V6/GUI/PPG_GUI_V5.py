@@ -1,11 +1,14 @@
 import serial
 import serial.tools.list_ports
 import keyboard
-from collections import deque
+import cmath
+import math
+import csv
+import struct
 from matplotlib import pyplot as plt
 from matplotlib.widgets import Button
 
-fulLen = 500 #default list length
+fulLen = 400 #default list length
 
 plt.figure(figsize=(8,6), dpi=100)
 axA = plt.axes([0.1, 0.80, 0.8, 0.15])
@@ -43,37 +46,39 @@ ser.read(i) #throw away until next syncronisation
 #now ser.read is synchronised
 
 
-IR_list = deque(maxlen=fulLen)
-RED_list = deque(maxlen=fulLen)
-GREEN_list = deque(maxlen=fulLen)
+IR_list = [0]*fulLen
+RED_list = [0]*fulLen
+GREEN_list = [0]*fulLen
 
 i = 0
-x_axis = range(0, fulLen * 5, 5)
 while not keyboard.is_pressed("s"):
     buffer = ser.read(8)
     if (buffer[0] == 0x7F and buffer[1] == 0xFF):   #confirm synchronization
-        RED_list.append(int.from_bytes(buffer[2:4], byteorder='little', signed = "False"))
-        IR_list.append(int.from_bytes(buffer[4:6], byteorder='little', signed = "False"))
-        GREEN_list.append(int.from_bytes(buffer[6:8], byteorder='little', signed = "False"))
-
+        RED = int.from_bytes(buffer[2:4], byteorder='little', signed = "False")
+        IR = int.from_bytes(buffer[4:6], byteorder='little', signed = "False") 
+        GREEN = int.from_bytes(buffer[6:8], byteorder='little', signed = "False") 
+        RED_list[i] = RED
+        IR_list[i] = IR
+        GREEN_list[i] = GREEN
+        
         i += 1
-        if i % 20 == 0 and len(RED_list) == fulLen:
+       
+        if (i==(fulLen)):
             axA.cla()
-            axA.set_title('RED', fontweight ="bold")
-            axA.plot(x_axis, RED_list)
+            axA.set_title('RED', fontweight ="bold")            
+            axA.plot(RED_list)
 
             axB.cla()
-            axB.set_title('IR', fontweight ="bold")
-            axB.plot(x_axis, IR_list)
-
+            axB.set_title('IR', fontweight ="bold")            
+            axB.plot(IR_list)
+            
             axC.cla()
-            axC.set_title('GREEN', fontweight ="bold")
-            axC.plot(x_axis, GREEN_list)
-
-            plt.xlabel('time(ms)')
+            axC.set_title('GREEN', fontweight ="bold")            
+            axC.plot(GREEN_list)
+            
             plt.draw()
-            plt.pause(0.01)
-
+            plt.pause(0.05)
+            i = 0  
  
     
 input('Press enter to exit')
