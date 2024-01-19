@@ -49,7 +49,7 @@ void updateShiftRegister(uint32_t mask, uint32_t values) {
 }
 
 
-void router(int numPairs, int *inputs, int *outputs) {
+void router_config(int numPairs, int *inputs, int *outputs) {
     int i;
     uint32_t mask = 0;
     uint32_t values = 0;
@@ -105,13 +105,9 @@ void router(int numPairs, int *inputs, int *outputs) {
         mask = 0x000000C0;
         values = 0x000000C0;
         updateShiftRegister(mask, values);
-
     }
-
-
     // Finalize MUX operation, Strobe low.
-    mask = 0x000000C0;
+    mask = 0x00000040;
     values = 0;
     updateShiftRegister(mask, values);
-
 }

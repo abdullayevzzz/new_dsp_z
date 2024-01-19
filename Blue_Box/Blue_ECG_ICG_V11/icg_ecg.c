@@ -6,8 +6,6 @@
 #include "constants.h"
 #include "exc_signal_dma.h"
 
-
-
 // Initialize arrays to define the routing configuration for the multiplexer.
 // 'inputs' array holds the input channel we want to connect.
 // 'outputs' array holds the corresponding output channel numbers that each input will be connected to.
@@ -20,14 +18,16 @@ int mux_inputs_2[] = {EXC_R, SNS_AP, SNS_AN, SNS_BP, SNS_BN, RET_GND};
 int mux_outputs_2[] = {OUT_7, OUT_8, OUT_9, OUT_11, OUT_12, OUT_13}; // Outputs are in range 1-32
 int num_pairs_2 = 6; // Enter the number of pairs
 
+uint16_t mux_period = 100; // mux period in ms
+
 //#include <sine_wave_gen.c>
 void sigGen (int16_t signal[], int f, int len, char s); // f in kHz, s = 's' for sine, 'c' for cosine
-void pack (uint8_t* data, volatile uint16_t *packetNumber, int32_t  *accumA1I, int32_t  *accumA1Q, int32_t  *accumB1I, int32_t  *accumB1Q, int32_t  *accumC1I, int32_t *accumC1Q, volatile uint32_t *accumD,  char *mode, uint8_t *mux_mode);
+void pack (uint8_t* data, uint16_t packet_number, int32_t  *accumA1I, int32_t  *accumA1Q, int32_t  *accumB1I, int32_t  *accumB1Q, int32_t  *accumC1I, int32_t *accumC1Q, volatile uint32_t *accumD,  char *mode, uint8_t mux_mode);
 extern int32_t _dmac (int16_t *x1, int16_t *x2, int16_t count1, int16_t rsltBitShift);
 void delay(int num);
 void initShiftRegister(uint32_t sr_val);
 void updateShiftRegister(uint32_t mask, uint32_t values);
-void router(int numPairs, int *inputs, int *outputs);
+void router_config(int numPairs, int *inputs, int *outputs);
 //
 // Defines
 #define Fs           250000 //sampling frequency
@@ -66,7 +66,8 @@ int16_t signal1cos[BUFLEN] = {0};
 #pragma DATA_SECTION(signal1cos, "ramgs15");
 
 volatile uint16_t counter = 0; // loop counter
-volatile uint16_t packetNumber = 0;
+uint16_t mux_counter = 0;
+volatile uint8_t packet_number = 0;
 char mode = 'd';
 
 uint8_t mux_mode = 1; // default mux mode
@@ -87,7 +88,7 @@ void main(void)
     sigGen(signal1cos,10,BUFLEN, 'c');
 
     unsigned char *msg;
-    uint16_t* data;
+    uint8_t* data;
 
     // Initialize device clock and peripherals
     Device_init();
@@ -305,7 +306,7 @@ void main(void)
     // The function will loop through each pair and program the multiplexer to connect each input to its corresponding output.
     // Can also route dynamically in the while loop
     // router(num_pairs_1, mux_inputs_1, mux_outputs_1);
-    router(num_pairs_1, mux_inputs_1, mux_outputs_1);
+    router_config(num_pairs_1, mux_inputs_1, mux_outputs_1);
 
     start_exc_dma();
     set_excitation_frequency(10);  // default frequency in kHz
@@ -367,7 +368,7 @@ void main(void)
             accumC1Q = _dmac(signal1cos,adcCResults,BUFLEN/20-1,0);
             if (!first_time){
                 int j;
-                for (j=11; j<21; j++){
+                for (j=11; j<22; j++){
                     HWREGH(SCIA_BASE + SCI_O_TXBUF) = data[j];
                 }
             }
@@ -388,7 +389,7 @@ void main(void)
             accumC1Q += _dmac(signal1cos+BUFLEN/2,adcCResults+BUFLEN/2,BUFLEN/20-1,0);
 
             //send result
-            pack (data, &packetNumber, &accumA1I, &accumA1Q, &accumB1I, &accumB1Q, &accumC1I, &accumC1Q, &accumD, &mode, &mux_mode);
+            pack (data, packet_number, &accumA1I, &accumA1Q, &accumB1I, &accumB1Q, &accumC1I, &accumC1Q, &accumD, &mode, mux_mode);
 
             //  SCI_writeCharArray(SCIA_BASE, data, 12); //replace with non-blocking code
             int j;
@@ -396,6 +397,7 @@ void main(void)
                 HWREGH(SCIA_BASE + SCI_O_TXBUF) = data[j];
             }
             fullFilled = 0;
+            mux_counter += 1; // 1kHz - 1 ms per sample
         }
 
         if(SCI_getRxFIFOStatus(SCIA_BASE) != SCI_FIFO_RX0){
@@ -453,24 +455,40 @@ void main(void)
                 case 'B': // Sense B gain -
                     updateShiftRegister(0x00380000, sr_current_val - 0x00080000);
                     break;
+                /*
                 case 'n': // Mux mode 1
                     EPWM_disableADCTrigger(EPWM_FOR_ADC_BASE , EPWM_SOC_B);
-                    router(num_pairs_1, mux_inputs_1, mux_outputs_1);
+                    router_config(num_pairs_1, mux_inputs_1, mux_outputs_1);
                     mux_mode = 1;
                     EPWM_enableADCTrigger(EPWM_FOR_ADC_BASE , EPWM_SOC_B);
                     break;
                 case 'm': // Mux mode 2
                     EPWM_disableADCTrigger(EPWM_FOR_ADC_BASE , EPWM_SOC_B);
-                    router(num_pairs_2, mux_inputs_2, mux_outputs_2);
+                    router_config(num_pairs_2, mux_inputs_2, mux_outputs_2);
                     mux_mode = 2;
                     EPWM_enableADCTrigger(EPWM_FOR_ADC_BASE , EPWM_SOC_B);
                     break;
+                */
                 case 'i': // Initialize again
                     sr_current_val = sr_initial_val;
                     initShiftRegister(sr_initial_val | 0x00000003); // test
-                    router(num_pairs_1, mux_inputs_1, mux_outputs_1);
+                    router_config(num_pairs_1, mux_inputs_1, mux_outputs_1);
                     break;
             }
+        }
+
+        if (mux_counter == mux_period){
+            // EPWM_disableADCTrigger(EPWM_FOR_ADC_BASE , EPWM_SOC_B);
+            router_config(num_pairs_1, mux_inputs_1, mux_outputs_1);
+            // EPWM_enableADCTrigger(EPWM_FOR_ADC_BASE , EPWM_SOC_B);
+            mux_mode = 1;
+        }
+        else if (mux_counter == mux_period * 2){
+            // EPWM_disableADCTrigger(EPWM_FOR_ADC_BASE , EPWM_SOC_B);
+            router_config(num_pairs_2, mux_inputs_2, mux_outputs_2);
+            // EPWM_enableADCTrigger(EPWM_FOR_ADC_BASE , EPWM_SOC_B);
+            mux_mode = 2;
+            mux_counter = 0;
         }
     }
 }
@@ -580,28 +598,24 @@ void initADCSOC(void)
 // ADC A Interrupt 1 ISR
 
 // OM now globals
-long int timer = 0;
-uint16_t excitIndex = 0;
 
 __interrupt void adcA1ISR(void)
 {
-    adcAResult = HWREGH(ADCADDR);
-    adcBResult = HWREGH(ADCBDDR);
-    adcCResult = HWREGH(ADCCDDR);
+    adcAResults[counter] = HWREGH(ADCADDR) - 32767; // make signed
+    adcBResults[counter] = HWREGH(ADCBDDR) - 32767;
+    adcCResults[counter] = HWREGH(ADCCDDR) - 32767;
     adcDResult += HWREGH(ADCDDDR);
 
     // Clear the interrupt flag
     HWREGH(ADCA_BASE + ADC_O_INTFLGCLR) = 0x0001;
     //ADC_clearInterruptStatus(ADCA_BASE, ADC_INT_NUMBER1);
 
-    adcAResults[counter] = adcAResult - 32767; // make signed
-    adcBResults[counter] = adcBResult - 32767;
-    adcCResults[counter] = adcCResult - 32767;
     counter++;
 
     if (counter >= BUFLEN){
         fullFilled = 1;
         counter = 0;
+        packet_number++;
     }
 
     // Acknowledge the interrupt

@@ -1,8 +1,8 @@
 # FIXED
 
 max30101Init.obj: ../max30101Init.c
-max30101Init.obj: C:/Users/admin/workspace_v12/Blue_ECG_ICG_V10.2/device/device.h
-max30101Init.obj: C:/Users/admin/workspace_v12/Blue_ECG_ICG_V10.2/device/driverlib.h
+max30101Init.obj: C:/Users/admin/workspace_v12/Blue_ECG_ICG_V11/device/device.h
+max30101Init.obj: C:/Users/admin/workspace_v12/Blue_ECG_ICG_V11/device/driverlib.h
 max30101Init.obj: C:/ti/c2000/C2000Ware_4_01_00_00/driverlib/f2837xd/driverlib/inc/hw_memmap.h
 max30101Init.obj: C:/ti/c2000/C2000Ware_4_01_00_00/driverlib/f2837xd/driverlib/adc.h
 max30101Init.obj: C:/ti/ccs1210/ccs/tools/compiler/ti-cgt-c2000_22.6.0.LTS/include/stdbool.h
@@ -87,9 +87,9 @@ max30101Init.obj: ../max30101.h
 
 ../max30101Init.c:
 
-C:/Users/admin/workspace_v12/Blue_ECG_ICG_V10.2/device/device.h:
+C:/Users/admin/workspace_v12/Blue_ECG_ICG_V11/device/device.h:
 
-C:/Users/admin/workspace_v12/Blue_ECG_ICG_V10.2/device/driverlib.h:
+C:/Users/admin/workspace_v12/Blue_ECG_ICG_V11/device/driverlib.h:
 
 C:/ti/c2000/C2000Ware_4_01_00_00/driverlib/f2837xd/driverlib/inc/hw_memmap.h:
 

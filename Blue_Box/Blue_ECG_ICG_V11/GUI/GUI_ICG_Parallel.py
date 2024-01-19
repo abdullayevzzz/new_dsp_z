@@ -1,6 +1,6 @@
 refRes = complex(909.0, 0.0)  # reference resistor OHM
-mux_time_ms = 200
-packet_size = 21
+mux_time_ms = 1000
+packet_size = 22
 
 from collections import deque
 from scipy import signal
@@ -188,7 +188,7 @@ def log(event):
         timestr = time.strftime("%Y%m%d_%H%M%S")
         f = open('log_' + timestr + '.csv', 'w+', newline='')
         writer = csv.writer(f)
-        header0 = ['BIOZ1', 'BIOZ2', 'ECG']
+        header0 = ['BIOZ1', 'BIOZ2', 'BIOZ3', 'BIOZ4', 'EXC_FREQ_KHZ', 'MUX_CONFIG', 'PACKET_NUMBER']
         writer.writerow(header0)
     else:
         try:
@@ -420,27 +420,33 @@ while not keyboard.is_pressed("s"):
         
         accumD = int.from_bytes(buffer[18:20], byteorder='little', signed="False")
         mux_mode_cur = int.from_bytes(buffer[20:21], byteorder='little', signed="False") & 0x0F
+        packet_number = int.from_bytes(buffer[21:22], byteorder='little', signed="False") & 0xFF
         
         magZ1 = abs(Z1)
         phZ1 = cmath.phase(Z1)
         magZ2 = abs(Z2)
         phZ2 = cmath.phase(Z2)
+        
         # Add values to raw queues and process for downsampling
         ecg_average = ECG_data.add(accumD)
         if mux_mode_cur == 1:
             if mux_mode_cur != mux_mode_prev:
                 mux_mode_prev = mux_mode_cur
-                # ser.read(packet_size * 2) # throw away some samples
+                # ser.read(packet_size * 4) # throw away some samples
                 continue # skip this sample
             BIOZ1_data.add(magZ1)
             BIOZ2_data.add(magZ2)
-        if mux_mode_cur == 2:
+        elif mux_mode_cur == 2:
             if mux_mode_cur != mux_mode_prev:
                 mux_mode_prev = mux_mode_cur
-                # ser.read(packet_size * 2) # throw away some samples
+                # ser.read(packet_size * 4) # throw away some samples
                 continue # skip this sample
             BIOZ3_data.add(magZ1)
             BIOZ4_data.add(magZ2)
+        else:
+            # ser.read(packet_size * 4) # throw away some samples
+            continue
+        
 
     else:
         print('Synchronization not confirmed. Use previous values')
@@ -474,7 +480,8 @@ while not keyboard.is_pressed("s"):
         mes = "\n\n*******Excitation signal frequency is changed to 1kHz*******\n\n"
         print(mes)
         if (logFlag):
-            writer.writerow(mes)
+            #   writer.writerow(mes)
+            pass
         ser.read(packet_size * 10)  # dummy read
     elif ((keyboard.is_pressed("2") or freq_button == 2) and freq != 2):
         ser.write(b'2')
@@ -482,7 +489,8 @@ while not keyboard.is_pressed("s"):
         mes = "\n\n*******Excitation signal frequency is changed to 10kHz*******\n\n"
         print(mes)
         if (logFlag):
-            writer.writerow(mes)
+            #   writer.writerow(mes)
+            pass
         ser.read(packet_size * 10)  # dummy read
     elif ((keyboard.is_pressed("3") or freq_button == 3) and freq != 3):
         ser.write(b'3')
@@ -490,14 +498,15 @@ while not keyboard.is_pressed("s"):
         mes = "\n\n*******Excitation signal frequency is changed to 100kHz*******\n\n"
         print(mes)
         if (logFlag):
-            writer.writerow(mes)
+            #   writer.writerow(mes)
+            pass
         ser.read(packet_size * 10)  # dummy read
 
     if logFlag:
-        writer.writerow([BIOZ1_data.downsampled[-1], BIOZ2_data.downsampled[-1], BIOZ3_data.downsampled[-1], BIOZ4_data.downsampled[-1]])
+        writer.writerow([BIOZ1_data.raw[-1], BIOZ2_data.raw[-1], BIOZ3_data.raw[-1], BIOZ4_data.raw[-1], str(10**(freq-1)), mux_mode_cur, packet_number])
 
     circular_counter += 1
-    if (circular_counter >= 500):
+    if (circular_counter >= 300):
         circular_counter = 0
         line1.set_ydata(list(BIOZ1_data.downsampled))
         axA.set_ylim(min(BIOZ1_data.downsampled), max(BIOZ1_data.downsampled))
@@ -510,11 +519,4 @@ while not keyboard.is_pressed("s"):
         fig.canvas.draw_idle()
         plt.pause(0.1)
         
-    mux_counter += 2 # 500kHz sampling rate -> 1 sample takes 2ms
-    if mux_counter == (mux_time_ms * 1):
-        ser.write(b'n') # Mux mode 1
-    elif mux_counter == (mux_time_ms * 2):
-        ser.write(b'm') # Mux mode 2
-        mux_counter = 0
-
 input('Press enter to exit')

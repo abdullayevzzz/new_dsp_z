@@ -6,8 +6,8 @@
  */
 #include "device.h"
 
-void pack (uint8_t* data, uint16_t *packetNumber, int32_t  *accumA1I, int32_t  *accumA1Q, int32_t  *accumB1I, int32_t  *accumB1Q,
-           int32_t  *accumC1I, int32_t  *accumC1Q, volatile  uint32_t  *accumD, char *mode, uint8_t *mux_mode) {
+void pack (uint8_t* data, uint8_t packetNumber, int32_t  *accumA1I, int32_t  *accumA1Q, int32_t  *accumB1I, int32_t  *accumB1Q,
+           int32_t  *accumC1I, int32_t  *accumC1Q, volatile  uint32_t  *accumD, char *mode, uint8_t mux_mode) {
 
     data[0] = 0x7F;  //synchronization
     data[1] = 0xFF;
@@ -95,7 +95,8 @@ void pack (uint8_t* data, uint16_t *packetNumber, int32_t  *accumA1I, int32_t  *
 
     data[18] = (*accumD) & 0xFF; //ECG data
     data[19] = (*accumD >> 8) & 0xFF;
-    data[20] = (config | (*mux_mode & 0x0F)) & 0xFF; // last 4 bits denotes mux mode
+    data[20] = mux_mode & 0x0F; // last 4 bits denotes mux mode
+    data[21] = packetNumber;
 
     // eliminate sync. problem
     /*int i;

@@ -9,8 +9,8 @@ wave_gen.obj: C:/ti/ccs1210/ccs/tools/compiler/ti-cgt-c2000_22.6.0.LTS/include/s
 wave_gen.obj: C:/ti/ccs1210/ccs/tools/compiler/ti-cgt-c2000_22.6.0.LTS/include/sys/cdefs.h
 wave_gen.obj: C:/ti/ccs1210/ccs/tools/compiler/ti-cgt-c2000_22.6.0.LTS/include/machine/_types.h
 wave_gen.obj: C:/ti/ccs1210/ccs/tools/compiler/ti-cgt-c2000_22.6.0.LTS/include/machine/_limits.h
-wave_gen.obj: C:/Users/admin/workspace_v12/Blue_ECG_ICG_V10.2/device/device.h
-wave_gen.obj: C:/Users/admin/workspace_v12/Blue_ECG_ICG_V10.2/device/driverlib.h
+wave_gen.obj: C:/Users/admin/workspace_v12/Blue_ECG_ICG_V11/device/device.h
+wave_gen.obj: C:/Users/admin/workspace_v12/Blue_ECG_ICG_V11/device/driverlib.h
 wave_gen.obj: C:/ti/c2000/C2000Ware_4_01_00_00/driverlib/f2837xd/driverlib/inc/hw_memmap.h
 wave_gen.obj: C:/ti/c2000/C2000Ware_4_01_00_00/driverlib/f2837xd/driverlib/adc.h
 wave_gen.obj: C:/ti/ccs1210/ccs/tools/compiler/ti-cgt-c2000_22.6.0.LTS/include/stdbool.h
@@ -105,9 +105,9 @@ C:/ti/ccs1210/ccs/tools/compiler/ti-cgt-c2000_22.6.0.LTS/include/machine/_types.
 
 C:/ti/ccs1210/ccs/tools/compiler/ti-cgt-c2000_22.6.0.LTS/include/machine/_limits.h:
 
-C:/Users/admin/workspace_v12/Blue_ECG_ICG_V10.2/device/device.h:
+C:/Users/admin/workspace_v12/Blue_ECG_ICG_V11/device/device.h:
 
-C:/Users/admin/workspace_v12/Blue_ECG_ICG_V10.2/device/driverlib.h:
+C:/Users/admin/workspace_v12/Blue_ECG_ICG_V11/device/driverlib.h:
 
 C:/ti/c2000/C2000Ware_4_01_00_00/driverlib/f2837xd/driverlib/inc/hw_memmap.h:
 
