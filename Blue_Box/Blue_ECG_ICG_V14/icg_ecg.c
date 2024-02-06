@@ -375,7 +375,7 @@ void main(void)
 
         if (fullFilled) //wait until full buffer to fill
         {
-            accumD = adcDResult>>0UL; //sum of 500 samples - divided by x. !! may be more than 500, check ISR
+            accumD = adcDResult>>9UL; //sum of 500 samples - divided by 2^x. !! may be more than 500, check ISR
             adcDResult = 0;
 
             //do the impedance calculation

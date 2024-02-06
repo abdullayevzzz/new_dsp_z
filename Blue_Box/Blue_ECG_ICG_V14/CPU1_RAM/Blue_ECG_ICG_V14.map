@@ -1,7 +1,7 @@
 ******************************************************************************
              TMS320C2000 Linker PC v22.6.0                     
 ******************************************************************************
->> Linked Tue Jan 23 17:50:07 2024
+>> Linked Fri Feb  2 19:12:43 2024
 
 OUTPUT FILE NAME:   <Blue_ECG_ICG_V14.out>
 ENTRY POINT SYMBOL: "code_start"  address: 00000000
@@ -115,8 +115,8 @@ PAGE 1:
   RAMGS0                0000c000   00001000  00000000  00001000  RWIX
   RAMGS1                0000d000   00001000  00000000  00001000  RWIX
   RAMGS2                0000e000   00001000  00001000  00000000  RWIX
-  RAMGS3                0000f000   00001000  00000fff  00000001  RWIX
-  RAMGS4                00010000   00001000  00000ffe  00000002  RWIX
+  RAMGS3                0000f000   00001000  00001000  00000000  RWIX
+  RAMGS4                00010000   00001000  00000fff  00000001  RWIX
   RAMGS5                00011000   00001000  00000e02  000001fe  RWIX
   RAMGS6                00012000   00001000  00000000  00001000  RWIX
   RAMGS7                00013000   00001000  00000000  00001000  RWIX
@@ -280,20 +280,19 @@ PieCtrlRegsFile
                   00000ce0    0000001a     F2837xD_GlobalVariableDefs.obj (PieCtrlRegsFile)
 
 .text.1    1    0000e630    000009d0     
-                  0000e630    000007cb     icg_ecg.obj (.text)
-                  0000edfb    000001c9     data_packer.obj (.text)
-                  0000efc4    00000038     driverlib_eabi.lib : gpio.obj (.text:GPIO_setMasterCore)
-                  0000effc    00000002                        : interrupt.obj (.text:Interrupt_illegalOperationHandler)
-                  0000effe    00000002                        : interrupt.obj (.text:Interrupt_nmiHandler)
+                  0000e630    000007cd     icg_ecg.obj (.text)
+                  0000edfd    000001c9     data_packer.obj (.text)
+                  0000efc6    00000038     driverlib_eabi.lib : gpio.obj (.text:GPIO_setMasterCore)
+                  0000effe    00000002                        : interrupt.obj (.text:Interrupt_illegalOperationHandler)
 
-.text.2    1    0000f000    00000fff     
+.text.2    1    0000f000    00001000     
                   0000f000    0000067d     rts2800_fpu32_eabi.lib : k_rem_pio2.c.obj (.text)
                   0000f67d    00000585     F2837xD_DefaultISR.obj (.text:retain)
                   0000fc02    000003fa     device.obj (.text)
-                  0000fffc    00000002     rts2800_fpu32_eabi.lib : pre_init.c.obj (.text)
-                  0000fffe    00000001                            : startup.c.obj (.text)
+                  0000fffc    00000002     driverlib_eabi.lib : interrupt.obj (.text:Interrupt_nmiHandler)
+                  0000fffe    00000002     rts2800_fpu32_eabi.lib : pre_init.c.obj (.text)
 
-.text.3    1    00010000    00000ffe     
+.text.3    1    00010000    00000fff     
                   00010000    00000431     rts2800_fpu32_eabi.lib : e_rem_pio2.c.obj (.text)
                   00010431    00000404     F2837xD_Dma.obj (.text)
                   00010835    00000207     driverlib_eabi.lib : sysctl.obj (.text:SysCtl_setClock)
@@ -303,6 +302,7 @@ PieCtrlRegsFile
                   00010d87    000000fb     funcs.obj (.text)
                   00010e82    000000e8     rts2800_fpu32_eabi.lib : s_floor.c.obj (.text)
                   00010f6a    00000094                            : s_round.c.obj (.text)
+                  00010ffe    00000001                            : startup.c.obj (.text)
 
 .text.4    1    00011000    00000e02     
                   00011000    000000ce     rts2800_fpu32_eabi.lib : s_cos.c.obj (.text)
@@ -384,14 +384,14 @@ MODULE SUMMARY
        Module                           code    ro data   rw data
        ------                           ----    -------   -------
     .\
-       icg_ecg.obj                      2063    288       2554   
+       icg_ecg.obj                      2065    288       2554   
        exc_signal_dma.obj               275     4         1020   
        data_packer.obj                  457     0         0      
        funcs.obj                        251     68        1      
        wave_gen.obj                     189     8         0      
        dmac1.obj                        27      0         0      
     +--+--------------------------------+-------+---------+---------+
-       Total:                           3262    368       3575   
+       Total:                           3264    368       3575   
                                                                  
     .\device\
        device.obj                       1018    19        6      
@@ -460,7 +460,7 @@ MODULE SUMMARY
        Stack:                           0       0         1016   
        Linker Generated:                0       88        0      
     +--+--------------------------------+-------+---------+---------+
-       Grand Total:                     14297   2069      5035   
+       Grand Total:                     14299   2069      5035   
 
 
 LINKER GENERATED COPY TABLES
@@ -688,7 +688,7 @@ page  address   name
 1     0000fa79  FPU_OVERFLOW_ISR                         
 1     0000fa83  FPU_UNDERFLOW_ISR                        
 1     00011930  GPIO_setDirectionMode                    
-1     0000efc4  GPIO_setMasterCore                       
+1     0000efc6  GPIO_setMasterCore                       
 1     000116a4  GPIO_setPadConfig                        
 1     000118c5  GPIO_setPinConfig                        
 1     0001188d  GPIO_setQualificationMode                
@@ -820,8 +820,8 @@ n/a   UNDEFED   __c_args__
 1     00011dd4  _nop                                     
 1     00011dd0  _register_lock                           
 1     00011dcc  _register_unlock                         
-1     0000fffe  _system_post_cinit                       
-1     0000fffc  _system_pre_init                         
+1     00010ffe  _system_post_cinit                       
+1     0000fffe  _system_pre_init                         
 1     0000e62c  _unlock                                  
 1     00011a13  abort                                    
 1     0000e5ec  accumD                                   
@@ -831,7 +831,7 @@ n/a   UNDEFED   __c_args__
 1     0000e3e8  adcCResults                              
 1     0000e5ea  adcDResult                               
 0     00000000  code_start                               
-1     0000ed74  configureADC                             
+1     0000ed76  configureADC                             
 1     00011a60  copysign                                 
 1     00011a60  copysignl                                
 1     00011000  cos                                      
@@ -845,8 +845,8 @@ n/a   UNDEFED   __c_args__
 1     00010e82  floorl                                   
 1     0000e5e0  fullFilled                               
 1     0000e5df  halfFilled                               
-1     0000edbd  initADCSOC                               
-1     0000ed95  initEPWM_ADC                             
+1     0000edbf  initADCSOC                               
+1     0000ed97  initEPWM_ADC                             
 1     00010dc8  initShiftRegister                        
 1     00011256  ldexp                                    
 1     00011256  ldexpl                                   
@@ -863,7 +863,7 @@ n/a   UNDEFED   __c_args__
 1     0000e5de  mux_period                               
 1     0000e5dc  num_pairs_1                              
 1     0000e5dd  num_pairs_2                              
-1     0000edfb  pack                                     
+1     0000edfd  pack                                     
 1     0000e5e4  packet_number                            
 1     00010f6a  round                                    
 1     00010f6a  roundl                                   
@@ -933,11 +933,11 @@ page  address   name
 1     0000e62c  _unlock                                  
 1     0000e62f  errno                                    
 1     0000e9d4  main                                     
-1     0000ed74  configureADC                             
-1     0000ed95  initEPWM_ADC                             
-1     0000edbd  initADCSOC                               
-1     0000edfb  pack                                     
-1     0000efc4  GPIO_setMasterCore                       
+1     0000ed76  configureADC                             
+1     0000ed97  initEPWM_ADC                             
+1     0000edbf  initADCSOC                               
+1     0000edfd  pack                                     
+1     0000efc6  GPIO_setMasterCore                       
 1     0000f000  __kernel_rem_pio2                        
 1     0000f67d  TIMER1_ISR                               
 1     0000f687  TIMER2_ISR                               
@@ -1092,8 +1092,7 @@ page  address   name
 1     0000fff1  Example_setResultPass                    
 1     0000fff6  Example_setResultFail                    
 1     0000fffb  Example_done                             
-1     0000fffc  _system_pre_init                         
-1     0000fffe  _system_post_cinit                       
+1     0000fffe  _system_pre_init                         
 1     00010000  __rem_pio2                               
 1     00010431  DMAInitialize                            
 1     0001043c  DMACH1AddrConfig                         
@@ -1151,6 +1150,7 @@ page  address   name
 1     00010e82  floorl                                   
 1     00010f6a  round                                    
 1     00010f6a  roundl                                   
+1     00010ffe  _system_post_cinit                       
 1     00011000  cos                                      
 1     00011000  cosl                                     
 1     000110ce  sin                                      
