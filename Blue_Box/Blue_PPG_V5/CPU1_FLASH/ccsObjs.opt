@@ -1,0 +1,9 @@
+"./data_packer.obj"
+"./i2cInit.obj"
+"./i2c_ex3_external_loopback.obj"
+"./max30101Init.obj"
+"./device/F2837xD_CodeStartBranch.obj"
+"./device/device.obj"
+"../2837xD_FLASH_lnk_cpu1.cmd"
+"C:/ti/c2000/C2000Ware_4_01_00_00/driverlib/f2837xd/driverlib/ccs/Debug/driverlib.lib"
+-llibc.a
