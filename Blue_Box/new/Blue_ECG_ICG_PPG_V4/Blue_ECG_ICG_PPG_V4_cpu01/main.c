@@ -447,12 +447,12 @@ void initADCSOC(void)
 }
 
 void execute_mux(void){
-    if (mux_mode != 1  &&  mux_counter >= mux_period) {
+    if (mux_counter == mux_period) {
         mux_busy_flag = 1;
         router_config(num_pairs_1, mux_inputs_1, mux_outputs_1);
         mux_busy_flag = 0;
         mux_mode = 1;
-    } else if (mux_mode != 2  &&  mux_counter >= mux_period * 2) {
+    } else if (mux_counter == mux_period * 2) {
         mux_busy_flag = 1;
         router_config(num_pairs_2, mux_inputs_2, mux_outputs_2);
         mux_busy_flag = 0;
@@ -462,18 +462,20 @@ void execute_mux(void){
         }
     }
 
-    if (num_z_channels == 8) {
-        if (mux_mode != 3  &&  mux_counter >= mux_period * 3) {
+    if (num_z_channels > 4) {
+        if (mux_counter == mux_period * 3) {
             mux_busy_flag = 1;
             router_config(num_pairs_3, mux_inputs_3, mux_outputs_3);
             mux_busy_flag = 0;
             mux_mode = 3;
-        } else if (mux_mode != 4  &&  mux_counter >= mux_period * 4) {
+        } else if (mux_counter == mux_period * 4) {
             mux_busy_flag = 1;
             router_config(num_pairs_4, mux_inputs_4, mux_outputs_4);
             mux_busy_flag = 0;
             mux_mode = 4;
-            mux_counter = 0; // Reset the counter after the last operation for 8-channel mode
+            if (num_z_channels == 8) {
+                mux_counter = 0; // Only reset the counter for 8-channel mode here
+            }
         }
     }
 }
