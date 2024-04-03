@@ -431,7 +431,7 @@ i = 0
 circular_counter = 0
 mux_mode_cur = 0
 mux_mode_prev = 0
-while not keyboard.is_pressed("s"):
+while (1):
     buffer = ser.read(packet_size)
     if len(buffer) != packet_size:
         print("Buffer not read")
