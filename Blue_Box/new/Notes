@@ -1,0 +1,3 @@
+Skip the transition sample
+Change ESP32 code (data packet 24 -> 25)
+Serial emulator is not working
