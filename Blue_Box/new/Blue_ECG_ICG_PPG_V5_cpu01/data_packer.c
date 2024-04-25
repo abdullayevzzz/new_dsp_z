@@ -7,7 +7,7 @@
 #include "device.h"
 
 void pack (uint8_t* data, uint8_t packetNumber, int32_t  *accumA1I, int32_t  *accumA1Q, int32_t  *accumB1I, int32_t  *accumB1Q,
-           int32_t  *accumC1I, int32_t  *accumC1Q, volatile  uint32_t  *accumD, char *mode, uint8_t mux_mode, uint16_t* ppg) {
+           int32_t  *accumC1I, int32_t  *accumC1Q, volatile  uint32_t  *accumD, char *mode, uint32_t mux_mode, uint16_t* ppg) {
 
     data[0] = 0x7F;  //synchronization
     data[1] = 0xFF;
@@ -18,24 +18,33 @@ void pack (uint8_t* data, uint8_t packetNumber, int32_t  *accumA1I, int32_t  *ac
     // data[2] = (*packetNumber) & 0xFF;  //prepared packet count
     // data[3] = (*packetNumber >> 8) & 0xFF;
 
+    data[2] = (28 << 2) & 0xFC;
+    data[2] |= 0x00; // packet type. 0x00 -> data, ...
+    data[3] = packetNumber;
+    data[4] = mux_mode & 0xFF; //
+    data[5] = (uint32_t)(mux_mode >> 8) & 0xFF; //
+    data[6] = (uint32_t)(mux_mode >> 16) & 0xFF; //
+    data[7] = (uint32_t)(mux_mode >> 24) & 0xFF; //
+
+
     if (*mode == 'd') {
-        data[2] = (*accumA1I >> 16) & 0xFF; //send only 16 MSB
-        data[3] = (*accumA1I >> 24) & 0xFF;
+        data[8] = (*accumA1I >> 16) & 0xFF; //send only 16 MSB
+        data[9] = (*accumA1I >> 24) & 0xFF;
 
-        data[4] = (*accumA1Q >> 16) & 0xFF;
-        data[5] = (*accumA1Q >> 24) & 0xFF;
+        data[10] = (*accumA1Q >> 16) & 0xFF;
+        data[11] = (*accumA1Q >> 24) & 0xFF;
 
-        data[6] = (*accumB1I >> 16) & 0xFF;
-        data[7] = (*accumB1I >> 24) & 0xFF;
+        data[12] = (*accumB1I >> 16) & 0xFF;
+        data[13] = (*accumB1I >> 24) & 0xFF;
 
-        data[8] = (*accumB1Q >> 16) & 0xFF;
-        data[9] = (*accumB1Q >> 24) & 0xFF;
+        data[14] = (*accumB1Q >> 16) & 0xFF;
+        data[15] = (*accumB1Q >> 24) & 0xFF;
 
-        data[10] = (*accumC1I >> 16) & 0xFF;
-        data[11] = (*accumC1I >> 24) & 0xFF;
+        data[16] = (*accumC1I >> 16) & 0xFF;
+        data[17] = (*accumC1I >> 24) & 0xFF;
 
-        data[12] = (*accumC1Q >> 16) & 0xFF;
-        data[13] = (*accumC1Q >> 24) & 0xFF;
+        data[18] = (*accumC1Q >> 16) & 0xFF;
+        data[19] = (*accumC1Q >> 24) & 0xFF;
     }
 
     else if (*mode == 'e'){
@@ -73,36 +82,33 @@ void pack (uint8_t* data, uint8_t packetNumber, int32_t  *accumA1I, int32_t  *ac
         uint32_t *dRatioImag2;  //cast to int
         dRatioImag2 = &fRatioImag2;
 
-        data[2] = (*dRatioReal) & 0xFF;
-        data[3] = (*dRatioReal >> 8) & 0xFF;
-        data[4] = (*dRatioReal >> 16) & 0xFF;
-        data[5] = (*dRatioReal >> 24) & 0xFF;
+        data[8] = (*dRatioReal) & 0xFF;
+        data[9] = (*dRatioReal >> 8) & 0xFF;
+        data[10] = (*dRatioReal >> 16) & 0xFF;
+        data[11] = (*dRatioReal >> 24) & 0xFF;
 
-        data[6] = (*dRatioImag) & 0xFF;
-        data[7] = (*dRatioImag >> 8) & 0xFF;
-        data[8] = (*dRatioImag >> 16) & 0xFF;
-        data[9] = (*dRatioImag >> 24) & 0xFF;
+        data[12] = (*dRatioImag) & 0xFF;
+        data[13] = (*dRatioImag >> 8) & 0xFF;
+        data[14] = (*dRatioImag >> 16) & 0xFF;
+        data[15] = (*dRatioImag >> 24) & 0xFF;
 
-        data[10] = (*dRatioReal2) & 0xFF;
-        data[11] = (*dRatioReal2 >> 8) & 0xFF;
-        data[12] = (*dRatioReal2 >> 16) & 0xFF;
-        data[13] = (*dRatioReal2 >> 24) & 0xFF;
+        data[16] = (*dRatioReal2) & 0xFF;
+        data[17] = (*dRatioReal2 >> 8) & 0xFF;
+        data[18] = (*dRatioReal2 >> 16) & 0xFF;
+        data[19] = (*dRatioReal2 >> 24) & 0xFF;
 
-        data[14] = (*dRatioImag2) & 0xFF;
-        data[15] = (*dRatioImag2 >> 8) & 0xFF;
-        data[16] = (*dRatioImag2 >> 16) & 0xFF;
-        data[17] = (*dRatioImag2 >> 24) & 0xFF;
+        data[20] = (*dRatioImag2) & 0xFF;
+        data[21] = (*dRatioImag2 >> 8) & 0xFF;
+        data[22] = (*dRatioImag2 >> 16) & 0xFF;
+        data[23] = (*dRatioImag2 >> 24) & 0xFF;
     }
 
-    data[18] = (*accumD) & 0xFF; //ECG data
-    data[19] = (*accumD >> 8) & 0xFF;
+    data[24] = (*accumD) & 0xFF; //ECG data
+    data[25] = (*accumD >> 8) & 0xFF;
 
-    data[21] = (ppg[0]) & 0xFF; //PPG data
-    data[20] = (ppg[0] >> 8) & 0xFF;
+    data[27] = (ppg[0]) & 0xFF; //PPG data
+    data[26] = (ppg[0] >> 8) & 0xFF;
 
-    data[22] = mux_mode & 0xFF; //
-    data[23] = (mux_mode >> 8) & 0xFF; //
-    data[24] = packetNumber;
 
     // eliminate sync. problem
     /*int i;

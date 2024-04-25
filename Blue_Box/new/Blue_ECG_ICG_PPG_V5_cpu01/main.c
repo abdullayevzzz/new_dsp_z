@@ -7,8 +7,8 @@
 #include "exc_signal_dma.h"
 #include "sci_b_esp32.h"
 
-uint16_t mux_period = 100; // mux period in ms
-#define NUM_OUTPUTS 8  // Number of output electrodes
+uint16_t mux_period = 4; // mux period in ms
+#define NUM_OUTPUTS 16  // Number of output electrodes
 
 
 // Initialize arrays to define the routing configuration for the multiplexer.
@@ -43,7 +43,7 @@ uint8_t tomo_mode = 0; // By default tomography mode is off, device operates in 
 //#include <sine_wave_gen.c>
 void sigGen (int16_t signal[], int f, int len, char s); // f in kHz, s = 's' for sine, 'c' for cosine
 void pack (uint8_t* data, uint16_t packet_number, int32_t  *accumA1I, int32_t  *accumA1Q, int32_t  *accumB1I, int32_t  *accumB1Q,
-           int32_t  *accumC1I, int32_t *accumC1Q, volatile uint32_t *accumD,  char *mode, uint8_t mux_mode, uint16_t* ppg);
+           int32_t  *accumC1I, int32_t *accumC1Q, volatile uint32_t *accumD,  char *mode, uint32_t mux_mode, uint16_t* ppg);
 extern int32_t _dmac (int16_t *x1, int16_t *x2, int16_t count1, int16_t rsltBitShift);
 void delay(int num);
 uint32_t mirror(uint32_t value);
@@ -57,7 +57,7 @@ void init_CPU2(void);
 //
 // Defines
 #define Fs           500000 //sampling frequency
-#define NUM_OF_BYTES    25
+#define NUM_OF_BYTES    28
 //
 #define EX_ADC_RESOLUTION       16
 // 12 for 12-bit conversion resolution, which supports (ADC_MODE_SINGLE_ENDED)
@@ -71,12 +71,12 @@ void init_CPU2(void);
 //const uint32_t sr_initial_val = 0b01010000000001111111111111111110;
 
 // ...............................MMMMMMMMMMMMMMMMEEDBBBAA_AIIIsSI
-const uint32_t sr_initial_val = 0b01111111111111111010000000001010; // rotated for SPI
+const uint32_t sr_initial_val = 0b01111111111111111010000000001000; // rotated for SPI
 volatile uint32_t sr_current_val = sr_initial_val;
 
 const uint8_t def_num_z_channels = 2;  // default num of z channels (2, 4 or 8)
 uint8_t num_z_channels = def_num_z_channels;
-uint16_t mux_mode = 1; // default mux mode
+uint32_t mux_mode = 1; // default mux mode
 
 volatile uint32_t adcDResult = 0;
 uint32_t  accumD = 0;  //accumulate ECG data
@@ -291,6 +291,7 @@ void main(void)
                     //  EPWM_setTimeBasePeriod(myEPWMk_BASE, EPWM_TIMER_TBPRD2*10);
                     //  EPWM_setCounterCompareValue(myEPWMk_BASE, EPWM_COUNTER_COMPARE_A, EPWM_TIMER_TBPRD2*10/2);
                     set_excitation_frequency(1);  // frequency in kHz
+                    mux_counter = 0;
                     break;
                 case '2': //10kHz
                     sigGen(signal1sin,10,BUFLEN, 's');
@@ -298,6 +299,7 @@ void main(void)
                     //  EPWM_setTimeBasePeriod(myEPWMk_BASE, EPWM_TIMER_TBPRD2);
                     //  EPWM_setCounterCompareValue(myEPWMk_BASE, EPWM_COUNTER_COMPARE_A, EPWM_TIMER_TBPRD2/2);
                     set_excitation_frequency(10);  // frequency in kHz
+                    mux_counter = 0;
                     break;
                 case '3': //100kHz
                     sigGen(signal1sin,100,BUFLEN, 's');
@@ -305,6 +307,7 @@ void main(void)
                     //  EPWM_setTimeBasePeriod(myEPWMk_BASE, EPWM_TIMER_TBPRD2/10);
                     //  EPWM_setCounterCompareValue(myEPWMk_BASE, EPWM_COUNTER_COMPARE_A, EPWM_TIMER_TBPRD2/20);
                     set_excitation_frequency(100);  // frequency in kHz
+                    mux_counter = 0;
                     break;
                 case 'x': // Excitation gain -
                     updateShiftRegister(0x00000038, mirror(mirror(sr_current_val) + 0x04000000));

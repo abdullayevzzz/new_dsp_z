@@ -1,10 +1,11 @@
-refRes = complex(909.0, 0.0)  # reference resistor OHM
+refRes = complex(10000.0, 0.0)  # reference resistor OHM
 mux_time_ms = 1000
-packet_size = 25
+packet_size = 28
 num_z_channels = 2  # default number of BIOZ channels
 mode_button = 'd'  # default mode
 freq_button = 2  # (10^freq-1)kHz default frequency
 tomo_mode = False
+tomo_mux_completed = False
 
 from collections import deque
 from scipy import signal
@@ -25,11 +26,11 @@ from matplotlib.widgets import Button, RadioButtons, CheckButtons, TextBox
 class FIFOQueue:
     def __init__(self, size):
         self.size = size
-        self.raw = deque([0] * size, maxlen=size)
-        self.downsampled = deque([0] * (size // 5), maxlen=size // 5)
-        self.filter_50 = deque([0] * 4, maxlen=4)  # window for 50Hz moving average filter
-        self.filter_100 = deque([0] * 2, maxlen=2)  # window for 100Hz moving average filter
-        self.temp = []  # Temporary buffer for downsampling
+        self.raw = deque([0] * self.size, maxlen=self.size)
+        self.downsampled = deque([0] * (self.size // 5), maxlen=self.size // 5)
+        self.filter_50 = deque([0] * 4, maxlen=4)
+        self.filter_100 = deque([0] * 2, maxlen=2)
+        self.temp = []
         self.prev = 0
         self.prev_prev = 0
 
@@ -125,8 +126,8 @@ BIOZ7_data = FIFOQueue(fulLen)
 BIOZ8_data = FIFOQueue(fulLen)
 ECG_data = FIFOQueue(fulLen)
 PPG_RED_data = FIFOQueue(fulLen)
-BIOZ1_TOMO_data = FIFOQueue(fulLen)
-BIOZ2_TOMO_data = FIFOQueue(fulLen)
+BIOZ1_TOMO = []
+BIOZ2_TOMO = []
 
 DC = 0  # default dc value
 DC_len = 50  # Length of hysteresis to calculate dc. Must be smaller than fulLen/4
@@ -463,14 +464,19 @@ while True:
         print("Buffer not read")
         continue
     elif buffer[0] == 0x7F and buffer[1] == 0xFF:  # confirm synchronization
+        packet_length = (int.from_bytes(buffer[2:3], byteorder='little', signed="False") >> 2) & 0xFC
+        packet_type = int.from_bytes(buffer[2:3], byteorder='little', signed="False") & 0x03
+        packet_number = int.from_bytes(buffer[3:4], byteorder='little', signed="False") & 0xFF
+        mux_mode_cur = int.from_bytes(buffer[4:8], byteorder='little', signed="False") & 0xFFFFFFFF
+
         if mode == 'd':
             # packet_number = int.from_bytes(buffer[2:4], byteorder='little')
-            accumA1I = int.from_bytes(buffer[2:4], byteorder='little', signed="True")
-            accumA1Q = int.from_bytes(buffer[4:6], byteorder='little', signed="True")
-            accumB1I = int.from_bytes(buffer[6:8], byteorder='little', signed="True")
-            accumB1Q = int.from_bytes(buffer[8:10], byteorder='little', signed="True")
-            accumC1I = int.from_bytes(buffer[10:12], byteorder='little', signed="True")
-            accumC1Q = int.from_bytes(buffer[12:14], byteorder='little', signed="True")
+            accumA1I = int.from_bytes(buffer[8:10], byteorder='little', signed="True")
+            accumA1Q = int.from_bytes(buffer[10:12], byteorder='little', signed="True")
+            accumB1I = int.from_bytes(buffer[12:14], byteorder='little', signed="True")
+            accumB1Q = int.from_bytes(buffer[14:16], byteorder='little', signed="True")
+            accumC1I = int.from_bytes(buffer[16:18], byteorder='little', signed="True")
+            accumC1Q = int.from_bytes(buffer[18:20], byteorder='little', signed="True")
             accumA1 = complex(accumA1I, accumA1Q)
             accumB1 = complex(accumB1I, accumB1Q)
             accumC1 = complex(accumC1I, accumC1Q)
@@ -488,10 +494,10 @@ while True:
 
         elif mode == 'e':
             # packet_number = int.from_bytes(buffer[2:4], byteorder='little')
-            ratioReal = struct.unpack('<f', buffer[2:6])
-            ratioImag = struct.unpack('<f', buffer[6:10])
-            ratioReal2 = struct.unpack('<f', buffer[10:14])
-            ratioImag2 = struct.unpack('<f', buffer[14:18])
+            ratioReal = struct.unpack('<f', buffer[8:12])
+            ratioImag = struct.unpack('<f', buffer[12:16])
+            ratioReal2 = struct.unpack('<f', buffer[16:20])
+            ratioImag2 = struct.unpack('<f', buffer[20:24])
             ratio = complex(ratioReal[0], ratioImag[0])
             ratio2 = complex(ratioReal2[0], ratioImag2[0])
             if (ratio == 0) or (ratio2 == 0):  # Skip zero division
@@ -506,10 +512,8 @@ while True:
             except ZeroDivisionError:
                 Z2 = 0
 
-        accumD = int.from_bytes(buffer[18:20], byteorder='little', signed="False")
-        ppg_red = int.from_bytes(buffer[20:22], byteorder='little', signed="False") & 0xFFFF
-        mux_mode_cur = int.from_bytes(buffer[22:24], byteorder='little', signed="False") & 0xFFFF
-        packet_number = int.from_bytes(buffer[24:25], byteorder='little', signed="False") & 0xFF
+        accumD = int.from_bytes(buffer[24:26], byteorder='little', signed="False")
+        ppg_red = int.from_bytes(buffer[26:28], byteorder='little', signed="False") & 0xFFFF
 
         magZ1 = abs(Z1)
         phZ1 = cmath.phase(Z1)
@@ -552,8 +556,14 @@ while True:
                 continue
 
         if tomo_mode is True:
-            BIOZ1_TOMO_data.add(magZ1)
-            BIOZ2_TOMO_data.add(magZ2)
+            if mux_mode_cur != mux_mode_prev:
+                mux_mode_prev = mux_mode_cur
+                tomo_mux_completed = True
+                BIOZ1_TOMO = []
+                BIOZ1_TOMO = []
+                continue  # skip this sample
+            BIOZ1_TOMO.append(magZ1)
+            BIOZ2_TOMO.append(magZ2)
 
     else:
         print('Synchronization not confirmed. Use previous values')
@@ -600,7 +610,7 @@ while True:
         if logFlag:
             pass
         ser.read(packet_size * 10)  # dummy read
-    elif num_z_channels != num_z_channels_prev:
+    if num_z_channels != num_z_channels_prev:
         num_z_channels_prev = num_z_channels
         ser.write({2: 'r', 4: 't', 8: 'y'}.get(num_z_channels).encode())
         plt.close('all')
@@ -610,14 +620,16 @@ while True:
     if logFlag:
         if tomo_mode is False:
             writer.writerow([BIOZ1_data.raw[-1], BIOZ2_data.raw[-1], BIOZ3_data.raw[-1], BIOZ4_data.raw[-1],
-                            ECG_data.raw[-1], PPG_RED_data.raw[-1], str(10 ** (freq - 1)), mux_mode_cur, packet_number])
+                             ECG_data.raw[-1], PPG_RED_data.raw[-1], str(10 ** (freq - 1)), mux_mode_cur,
+                             packet_number])
 
-        elif tomo_mode is True:
+        elif (tomo_mode is True) and (tomo_mux_completed is True):  # Only log 1 averaged value per mux position
             gnd_output_pin = ((mux_mode_cur >> 10) & 0x1F) + 1
-            exc_output_pin = ((mux_mode_cur >> 5) & 0x1F)  + 1
-            sns_output_pin = (mux_mode_cur & 0x1F)  + 1
-            writer.writerow([BIOZ1_TOMO_data.raw[-1], str(10 ** (freq - 1)), gnd_output_pin,
+            exc_output_pin = ((mux_mode_cur >> 5) & 0x1F) + 1
+            sns_output_pin = (mux_mode_cur & 0x1F) + 1
+            writer.writerow([sum(BIOZ1_TOMO) / len(BIOZ1_TOMO), str(10 ** (freq - 1)), gnd_output_pin,
                              exc_output_pin, sns_output_pin, packet_number])
+            tomo_mux_completed = False
 
     circular_counter += 1
     if (circular_counter >= 300):
@@ -635,4 +647,3 @@ while True:
             fig.canvas.draw_idle()
             plt.pause(0.1)
 input('Press enter to exit')
-
