@@ -510,6 +510,52 @@ void execute_normal_mux(void){
 }
 
 void execute_tomography_mux(void) {
+    static uint16_t exc_out = 0;
+    static uint16_t ret_out = NUM_OUTPUTS / 2; // Assuming NUM_OUTPUTS is even and this calculation places ret_out opposite to exc_out
+    static uint16_t sns_ap_out = 0; // Start sns_ap_out from the second output
+    static uint16_t sns_an_out = 1; // Start sns_an_out from the third output
+    static uint16_t sns_bp_out = 2; // b channel not used yet
+    static uint16_t sns_bn_out = 3; // b channel not used yet
+    static uint16_t* tomo_inputs = mux_inputs;  // Inputs are the same all the time
+
+
+    if (mux_counter < mux_period)
+        return;
+
+    sns_ap_out++;  // inner loop increment
+    sns_an_out++;
+
+    if (sns_an_out >= NUM_OUTPUTS){ // Inner loop reset
+        exc_out++;
+        ret_out = (ret_out + 1) % NUM_OUTPUTS;
+        sns_ap_out = 0;
+        sns_an_out = 1;
+
+        if (exc_out >= NUM_OUTPUTS){ // Outer loop reset
+            exc_out = 0;
+            ret_out = NUM_OUTPUTS / 2;
+        }
+    }
+
+    if ((sns_ap_out != exc_out) && (sns_ap_out != ret_out) &&
+                (sns_an_out != exc_out) && (sns_an_out != ret_out)){
+        uint16_t tomo_outputs[] = {mux_outputs[exc_out], mux_outputs[sns_ap_out], mux_outputs[sns_an_out], mux_outputs[ret_out]};
+        mux_busy_flag = 1;
+        router_config(4, tomo_inputs, tomo_outputs); // Assuming 'inputs' is defined somewhere
+        mux_busy_flag = 0;
+        // mux_mode = (ret_out << 10) | (exc_out << 5) | (sns_ap_out);
+        mux_mode = ((uint32_t)exc_out << 25) | ((uint32_t)sns_ap_out << 20) | ((uint32_t)sns_an_out << 15) |
+                   (sns_bp_out << 10) | (sns_bn_out << 5) | (ret_out);
+    }
+
+    else
+        execute_tomography_mux();
+
+    // Reset mux_counter for the next period
+    mux_counter = 0;
+
+    /*
+
     static uint16_t ret_out = 0;
     static uint16_t sns_ap_out = 1;
     static uint16_t exc_out = 1;
@@ -547,6 +593,8 @@ void execute_tomography_mux(void) {
         execute_tomography_mux(); // call this function again, since in this iteration mux operation did not happen yet
     }
     mux_counter = 0;
+
+    */
 }
 
 void initSPIBMaster(void)

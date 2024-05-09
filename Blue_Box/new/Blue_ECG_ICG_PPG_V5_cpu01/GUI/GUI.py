@@ -126,8 +126,10 @@ BIOZ7_data = FIFOQueue(fulLen)
 BIOZ8_data = FIFOQueue(fulLen)
 ECG_data = FIFOQueue(fulLen)
 PPG_RED_data = FIFOQueue(fulLen)
-BIOZ1_TOMO = []
-BIOZ2_TOMO = []
+BIOZ1_MAG = []
+BIOZ2_MAG = []
+BIOZ1_PHASE = []
+BIOZ2_PHASE = []
 
 DC = 0  # default dc value
 DC_len = 50  # Length of hysteresis to calculate dc. Must be smaller than fulLen/4
@@ -186,7 +188,7 @@ def log(event):
         f = open('log_' + timestr + '.csv', 'w+', newline='')
         writer = csv.writer(f)
         header_wave = ['BIOZ1', 'BIOZ2', 'BIOZ3', 'BIOZ4', 'ECG', 'PPG', 'EXC_FREQ_KHZ', 'MUX_CONFIG', 'PACKET_NUMBER']
-        header_tomo = ['BIOZ1_TOMO', 'EXC_FREQ_KHZ', 'GND_OUTPUT', 'EXC_OUTPUT', 'SENSE_OUTPUT', 'PACKET_NUMBER']
+        header_tomo = ['BIOZ1_MAG', 'BIOZ1_PHASE', 'EXC_FREQ_KHZ', 'EXC_PIN', 'GND_PIN', 'SNS_AP_PIN', 'SNS_AN_PIN', 'PACKET_NUMBER']
         if tomo_mode is False:
             writer.writerow(header_wave)
         if tomo_mode is True:
@@ -559,11 +561,15 @@ while True:
             if mux_mode_cur != mux_mode_prev:
                 mux_mode_prev = mux_mode_cur
                 tomo_mux_completed = True
-                BIOZ1_TOMO = []
-                BIOZ1_TOMO = []
+                BIOZ1_MAG = []
+                BIOZ1_MAG = []
+                BIOZ1_PHASE = []
+                BIOZ2_PHASE = []
                 continue  # skip this sample
-            BIOZ1_TOMO.append(magZ1)
-            BIOZ2_TOMO.append(magZ2)
+            BIOZ1_MAG.append(magZ1)
+            BIOZ1_PHASE.append(phZ1)
+            BIOZ2_MAG.append(magZ2)
+            BIOZ2_PHASE.append(phZ2)
 
     else:
         print('Synchronization not confirmed. Use previous values')
@@ -624,11 +630,18 @@ while True:
                              packet_number])
 
         elif (tomo_mode is True) and (tomo_mux_completed is True):  # Only log 1 averaged value per mux position
-            gnd_output_pin = ((mux_mode_cur >> 10) & 0x1F) + 1
-            exc_output_pin = ((mux_mode_cur >> 5) & 0x1F) + 1
-            sns_output_pin = (mux_mode_cur & 0x1F) + 1
-            writer.writerow([sum(BIOZ1_TOMO) / len(BIOZ1_TOMO), str(10 ** (freq - 1)), gnd_output_pin,
-                             exc_output_pin, sns_output_pin, packet_number])
+            # gnd_output_pin = ((mux_mode_cur >> 10) & 0x1F) + 1
+            # exc_output_pin = ((mux_mode_cur >> 5) & 0x1F) + 1
+            # sns_output_pin = (mux_mode_cur & 0x1F) + 1
+            exc_pin = ((mux_mode_cur >> 25) & 0x1F) + 1
+            sns_ap_pin = ((mux_mode_cur >> 20) & 0x1F) + 1
+            sns_an_pin = ((mux_mode_cur >> 15) & 0x1F) + 1
+            sns_bp_pin = ((mux_mode_cur >> 10) & 0x1F) + 1
+            sns_bn_pin = ((mux_mode_cur >> 5) & 0x1F) + 1
+            gnd_pin = (mux_mode_cur & 0x1F) + 1
+
+            writer.writerow([round(sum(BIOZ1_MAG) / len(BIOZ1_MAG), 6), round(sum(BIOZ1_PHASE) / len(BIOZ1_PHASE), 6),
+                            str(10 ** (freq - 1)), exc_pin, gnd_pin, sns_ap_pin, sns_an_pin, packet_number])
             tomo_mux_completed = False
 
     circular_counter += 1
