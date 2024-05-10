@@ -512,10 +512,10 @@ void execute_normal_mux(void){
 void execute_tomography_mux(void) {
     static uint16_t exc_out = 0;
     static uint16_t ret_out = NUM_OUTPUTS / 2; // Assuming NUM_OUTPUTS is even and this calculation places ret_out opposite to exc_out
-    static uint16_t sns_ap_out = 0; // Start sns_ap_out from the second output
-    static uint16_t sns_an_out = 1; // Start sns_an_out from the third output
-    static uint16_t sns_bp_out = 2; // b channel not used yet
-    static uint16_t sns_bn_out = 3; // b channel not used yet
+    static uint16_t sns_ap_out = 1; // Start sns_ap_out from the second output
+    static uint16_t sns_an_out = 2; // Start sns_an_out from the third output
+    static uint16_t sns_bp_out = 0; // b channel not used yet
+    static uint16_t sns_bn_out = 0; // b channel not used yet
     static uint16_t* tomo_inputs = mux_inputs;  // Inputs are the same all the time
 
 
@@ -523,9 +523,9 @@ void execute_tomography_mux(void) {
         return;
 
     sns_ap_out++;  // inner loop increment
-    sns_an_out++;
+    sns_an_out = (sns_an_out + 1) % NUM_OUTPUTS;
 
-    if (sns_an_out >= NUM_OUTPUTS){ // Inner loop reset
+    if (sns_ap_out >= NUM_OUTPUTS){ // Inner loop reset
         exc_out++;
         ret_out = (ret_out + 1) % NUM_OUTPUTS;
         sns_ap_out = 0;
