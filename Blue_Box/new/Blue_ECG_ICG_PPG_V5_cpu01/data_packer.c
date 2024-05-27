@@ -7,7 +7,7 @@
 #include "device.h"
 
 void pack (uint8_t* data, uint8_t packetNumber, int32_t  *accumA1I, int32_t  *accumA1Q, int32_t  *accumB1I, int32_t  *accumB1Q,
-           int32_t  *accumC1I, int32_t  *accumC1Q, volatile  uint32_t  *accumD, char *mode, uint32_t mux_mode, uint16_t* ppg) {
+           int32_t  *accumC1I, int32_t  *accumC1Q, volatile  uint32_t  *accumD, char *mode, uint32_t *mux_mode, uint16_t* ppg) {
 
     data[0] = 0x7F;  //synchronization
     data[1] = 0xFF;
@@ -21,10 +21,12 @@ void pack (uint8_t* data, uint8_t packetNumber, int32_t  *accumA1I, int32_t  *ac
     data[2] = (28 << 2) & 0xFC;
     data[2] |= 0x00; // packet type. 0x00 -> data, ...
     data[3] = packetNumber;
-    data[4] = mux_mode & 0xFF; //
-    data[5] = (uint32_t)(mux_mode >> 8) & 0xFF; //
-    data[6] = (uint32_t)(mux_mode >> 16) & 0xFF; //
-    data[7] = (uint32_t)(mux_mode >> 24) & 0xFF; //
+    data[4] = *mux_mode & 0xFF; //
+    data[5] = (uint32_t)(*mux_mode >> 8) & 0xFF; //
+    data[6] = (uint32_t)(*mux_mode >> 16) & 0xFF; //
+    data[7] = (uint32_t)(*mux_mode >> 24) & 0xFF; //
+
+    *mux_mode &= 0x3FFFFFFF;
 
 
     if (*mode == 'd') {

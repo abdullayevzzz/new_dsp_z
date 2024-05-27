@@ -7,7 +7,7 @@
 #include "exc_signal_dma.h"
 #include "sci_b_esp32.h"
 
-uint16_t mux_period = 4; // mux period in ms
+uint16_t mux_period = 100; // mux period in ms
 #define NUM_OUTPUTS 16  // Number of output electrodes
 
 
@@ -43,7 +43,7 @@ uint8_t tomo_mode = 0; // By default tomography mode is off, device operates in 
 //#include <sine_wave_gen.c>
 void sigGen (int16_t signal[], int f, int len, char s); // f in kHz, s = 's' for sine, 'c' for cosine
 void pack (uint8_t* data, uint16_t packet_number, int32_t  *accumA1I, int32_t  *accumA1Q, int32_t  *accumB1I, int32_t  *accumB1Q,
-           int32_t  *accumC1I, int32_t *accumC1Q, volatile uint32_t *accumD,  char *mode, uint32_t mux_mode, uint16_t* ppg);
+           int32_t  *accumC1I, int32_t *accumC1Q, volatile uint32_t *accumD,  char *mode, uint32_t *mux_mode, uint16_t* ppg);
 extern int32_t _dmac (int16_t *x1, int16_t *x2, int16_t count1, int16_t rsltBitShift);
 void delay(int num);
 uint32_t mirror(uint32_t value);
@@ -76,7 +76,7 @@ volatile uint32_t sr_current_val = sr_initial_val;
 
 const uint8_t def_num_z_channels = 2;  // default num of z channels (2, 4 or 8)
 uint8_t num_z_channels = def_num_z_channels;
-uint32_t mux_mode = 1; // default mux mode
+volatile uint32_t mux_mode = 1; // default mux mode
 
 volatile uint32_t adcDResult = 0;
 uint32_t  accumD = 0;  //accumulate ECG data
@@ -248,7 +248,7 @@ void main(void)
             accumC1Q += _dmac(signal1cos+BUFLEN/2,adcCResults+BUFLEN/2,BUFLEN/20-1,0);
 
             //pack result
-            pack (data, packet_number, &accumA1I, &accumA1Q, &accumB1I, &accumB1Q, &accumC1I, &accumC1Q, &accumD, &mode, mux_mode, ppg_read);
+            pack (data, packet_number, &accumA1I, &accumA1Q, &accumB1I, &accumB1Q, &accumC1I, &accumC1Q, &accumD, &mode, &mux_mode, ppg_read);
 
             //  SCI_writeCharArray(SCIA_BASE, data, 12); //replace with non-blocking code
             int j;
@@ -517,7 +517,9 @@ void execute_tomography_mux(void) {
     static uint16_t sns_bp_out = 0; // b channel not used yet
     static uint16_t sns_bn_out = 0; // b channel not used yet
     static uint16_t* tomo_inputs = mux_inputs;  // Inputs are the same all the time
-
+    static uint16_t exc_update_flag = 0;
+    static uint16_t sns_counter = 0; // sns electrode iteration counter
+    static uint16_t sns_limit = NUM_OUTPUTS - 4; // sns electrode iteration limit
 
     if (mux_counter < mux_period)
         return;
@@ -525,17 +527,20 @@ void execute_tomography_mux(void) {
     sns_ap_out++;  // inner loop increment
     sns_an_out = (sns_an_out + 1) % NUM_OUTPUTS;
 
-    if (sns_ap_out >= NUM_OUTPUTS){ // Inner loop reset
+    if (sns_counter >= sns_limit){ // Inner loop reset
+        sns_counter = 0;
         exc_out++;
         ret_out = (ret_out + 1) % NUM_OUTPUTS;
         sns_ap_out = 0;
         sns_an_out = 1;
+        exc_update_flag = 1; // set outer loop increment flag
 
         if (exc_out >= NUM_OUTPUTS){ // Outer loop reset
             exc_out = 0;
             ret_out = NUM_OUTPUTS / 2;
         }
     }
+
 
     if ((sns_ap_out != exc_out) && (sns_ap_out != ret_out) &&
                 (sns_an_out != exc_out) && (sns_an_out != ret_out)){
@@ -544,8 +549,11 @@ void execute_tomography_mux(void) {
         router_config(4, tomo_inputs, tomo_outputs); // Assuming 'inputs' is defined somewhere
         mux_busy_flag = 0;
         // mux_mode = (ret_out << 10) | (exc_out << 5) | (sns_ap_out);
-        mux_mode = ((uint32_t)exc_out << 25) | ((uint32_t)sns_ap_out << 20) | ((uint32_t)sns_an_out << 15) |
-                   (sns_bp_out << 10) | (sns_bn_out << 5) | (ret_out);
+        mux_mode = ((uint32_t)exc_update_flag << 31) |  ((uint32_t)0x01 << 30) | ((uint32_t)exc_out << 25) |
+                    ((uint32_t)sns_ap_out << 20) | ((uint32_t)sns_an_out << 15) | (sns_bp_out << 10) |
+                    (sns_bn_out << 5) | (ret_out);
+        sns_counter++;
+        exc_update_flag = 0;
     }
 
     else
@@ -674,4 +682,3 @@ void init_CPU2(void)
     #endif // _FLASH
     #endif // _STANDALONE
 }
-
