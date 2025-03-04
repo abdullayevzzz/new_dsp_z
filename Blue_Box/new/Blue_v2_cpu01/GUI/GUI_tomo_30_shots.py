@@ -322,7 +322,7 @@ class FrequencySweepData:
 class RangeSetter:
     def __init__(self):
         self.coefs = ['x0', 'x0.25', 'x0.5', 'x1', 'x2', 'x4', 'x8', 'x16']
-        self.ranges = {'EXC': 4, 'Z 1': 7, 'Z 2': 7}
+        self.ranges = {'EXC': 3, 'Z 1': 7, 'Z 2': 7}
         self.current_signal = 'EXC'
 
     def next(self, event=0):
