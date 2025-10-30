@@ -1,0 +1,11 @@
+# Compiled output (The final program file)
+NEW_Z_BOX/new_dsp_z/CPU1_RAM/*.out
+
+# Compiler/Linker map file (details memory usage)
+NEW_Z_BOX/new_dsp_z/CPU1_RAM/*.map
+
+# Object files (intermediate code generated during compilation)
+NEW_Z_BOX/new_dsp_z/CPU1_RAM/*.obj
+
+# Entire folder
+NEW_Z_BOX/new_dsp_z/CPU1_RAM/.clangd
