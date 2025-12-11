@@ -1,5 +1,3 @@
-"./syscfg/board.obj"
-"./syscfg/c2000ware_libraries.obj"
 "./main.obj"
 "./device/F2837xD_CodeStartBranch.obj"
 "./device/device.obj"
