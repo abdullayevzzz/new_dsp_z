@@ -10,9 +10,9 @@
 //
 //#############################################################################
 //
-//
+// $Release Date: $
 // $Copyright:
-// Copyright (C) 2013-2025 Texas Instruments Incorporated - http://www.ti.com/
+// Copyright (C) 2013-2023 Texas Instruments Incorporated - http://www.ti.com/
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions 
@@ -49,15 +49,12 @@
 //
 #include "driverlib.h"
 #include "device.h"
-#include "board.h"
-#include "c2000ware_libraries.h"
 
 //
 // Main
 //
 void main(void)
 {
-
     //
     // Initialize device clock and peripherals
     //
@@ -82,12 +79,12 @@ void main(void)
     //
     // PinMux and Peripheral Initialization
     //
-    Board_init();
+    // Board_init();
 
     //
     // C2000Ware Library initialization
     //
-    C2000Ware_libraries_init();
+    // C2000Ware_libraries_init();
 
     //
     // Enable Global Interrupt (INTM) and real time interrupt (DBGM)
@@ -95,10 +92,6 @@ void main(void)
     EINT;
     ERTM;
 
-    while(1)
-    {
-        
-    }
 }
 
 //

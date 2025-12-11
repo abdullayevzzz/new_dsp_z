@@ -5,10 +5,8 @@
 // TITLE:   C28x EPWM Driver
 //
 //#############################################################################
-// 
-// C2000Ware v6.00.00.00
-//
-// Copyright (C) 2024 Texas Instruments Incorporated - http://www.ti.com
+// $Copyright:
+// Copyright (C) 2022 Texas Instruments Incorporated - http://www.ti.com
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions 
@@ -2264,7 +2262,7 @@ EPWM_setupEPWMLinks(uint32_t base, EPWM_CurrentLink epwmLink,
     // Configure EPWM links
     //
     HWREG(registerOffset) =
-        ((HWREG(registerOffset) & ~((uint32_t)EPWM_XLINK_TBPRDLINK_M << (uint32_t)linkComp)) |
+        ((HWREG(registerOffset) & ~(EPWM_XLINK_TBPRDLINK_M << (uint32_t)linkComp)) |
         ((uint32_t)epwmLink << (uint32_t)linkComp));
 }
 
@@ -6507,74 +6505,6 @@ EPWM_getDigitalCompareCaptureStatus(uint32_t base)
     //
     return((HWREGH(base + EPWM_O_DCCAPCTL) & EPWM_DCCAPCTL_CAPSTS) ==
                                                         EPWM_DCCAPCTL_CAPSTS);
-}
-
-//*****************************************************************************
-//
-//! Clears DC capture latched status flag
-//!
-//! \param base is the base address of the EPWM module.
-//! This function is used to clear the CAPSTS (set) condition.
-//!
-//! \return None.
-//*****************************************************************************
-static inline void
-EPWM_clearDigitalCompareCaptureStatusFlag(uint32_t base)
-{
-    //
-    // Check the arguments
-    //
-    ASSERT(EPWM_isBaseValid(base));
-
-    //
-    // Clear digital compare capture status flag
-    //
-    EALLOW;
-    HWREGH(base + EPWM_O_DCCAPCTL) &= ~EPWM_DCCAPCTL_CAPCLR;
-    EDIS;
-}
-
-//*****************************************************************************
-//
-//! Configures DC capture operating mode
-//!
-//! \param base is the base address of the EPWM module.
-//! \param disableClearMode is the clear mode bit.
-//!
-//! This function is used to configure the DC capture operating mode. If
-//! \e disableClearMode is false, the TBCNT value is captured in active register
-//! on occurance of DCEVTFILT event. The trip events are ignored until next
-//! PRD or ZRO event re-triggers the capture mechanism.
-//! If \e disableClearMode is true, the TBCNT value is captured, CAPSTS flag is
-//! set and further trips are ignored until CAPSTS bit is cleared.
-//!
-//! \return None.
-//*****************************************************************************
-static inline void
-EPWM_configureDigitalCompareCounterCaptureMode(uint32_t base,
-                                               bool disableClearMode)
-{
-    //
-    // Check the arguments
-    //
-    ASSERT(EPWM_isBaseValid(base));
-
-    EALLOW;
-    if(disableClearMode)
-    {
-        //
-        // Disable DC counter auto-clear on PULSESEL event
-        //
-        HWREGH(base + EPWM_O_DCCAPCTL) |= EPWM_DCCAPCTL_CAPMODE;
-    }
-    else
-    {
-       //
-       // Enable DC counter clear on PULSESEL events
-       //
-       HWREGH(base + EPWM_O_DCCAPCTL) &= ~EPWM_DCCAPCTL_CAPMODE;
-    }
-    EDIS;
 }
 
 //*****************************************************************************

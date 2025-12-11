@@ -5,10 +5,8 @@
 // TITLE:  C28x CLB driver.
 //
 //###########################################################################
-// 
-// C2000Ware v6.00.00.00
-//
-// Copyright (C) 2024 Texas Instruments Incorporated - http://www.ti.com
+// $Copyright:
+// Copyright (C) 2022 Texas Instruments Incorporated - http://www.ti.com
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions 
@@ -618,8 +616,7 @@ static inline void CLB_configGPInputMux(uint32_t base, CLB_Inputs inID,
 
     HWREGH(base + CLB_LOGICCTL + CLB_O_IN_MUX_SEL_0) =
         (HWREGH(base + CLB_LOGICCTL + CLB_O_IN_MUX_SEL_0) &
-         ~(CLB_IN_MUX_SEL_0_SEL_GP_IN_0 << (uint16_t)inID)) |
-        ((uint16_t)gpMuxCfg << (uint16_t)inID);
+         ~(CLB_IN_MUX_SEL_0_SEL_GP_IN_0 << inID)) | (gpMuxCfg << inID);
 }
 
 //*****************************************************************************
@@ -797,6 +794,12 @@ static inline void CLB_configGlobalInputMux(uint32_t base, CLB_Inputs inID,
 //! The \e enable parameter can have one of the values from:
 //! false: Disable the respective CLB outputs
 //! true: Enable the respective CLB outputs
+//!
+//! \note Note that the 8 CLB outputs are replicated to create more output
+//!  paths. See your technical reference manual for more details.
+//!  If no further modifications are expected, then it is advised to set the
+//!  block writes bit of the MISC_ACCESS_CTRL Register. This will prevent
+//!  accidental writes.
 //!
 //! \return None.
 //
@@ -1128,7 +1131,7 @@ static inline void CLB_programHLCInstruction(uint32_t base,
                                              uint32_t instruction)
 {
     ASSERT(CLB_isBaseValid(base));
-    ASSERT(instructionNum < 32U);
+    ASSERT(instructionNum < 32);
 
     CLB_writeInterface(base, CLB_ADDR_HLC_BASE + instructionNum, instruction);
 }

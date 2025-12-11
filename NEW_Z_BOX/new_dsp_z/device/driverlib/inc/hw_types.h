@@ -5,10 +5,8 @@
 // TITLE:  Type definitions used in driverlib functions.
 //
 //###########################################################################
-// 
-// C2000Ware v6.00.00.00
-//
-// Copyright (C) 2024 Texas Instruments Incorporated - http://www.ti.com
+// $Copyright:
+// Copyright (C) 2022 Texas Instruments Incorporated - http://www.ti.com
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions 
@@ -155,12 +153,5 @@ extern uint32_t &__byte_peripheral_32(uint32_t *x);
 typedef bool _Bool;
 #endif
 
-/* To fix Misra-C errors */
-#ifndef TRUE
-#define TRUE  1
-#endif
-#ifndef FALSE
-#define FALSE  0
-#endif
 
 #endif // HW_TYPES_H

@@ -5,10 +5,8 @@
 // TITLE:  C28x DAC driver.
 //
 //###########################################################################
-// 
-// C2000Ware v6.00.00.00
-//
-// Copyright (C) 2024 Texas Instruments Incorporated - http://www.ti.com
+// $Copyright:
+// Copyright (C) 2022 Texas Instruments Incorporated - http://www.ti.com
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions 
@@ -179,7 +177,7 @@ DAC_getRevision(uint32_t base)
 //!
 //! This function sets the DAC reference voltage.
 //!
-//! The \e source parameter can have the following value:
+//! The \e source parameter can have one of two values:
 //! - \b DAC_REF_VDAC       - The VDAC reference voltage
 //! - \b DAC_REF_ADC_VREFHI - The ADC VREFHI reference voltage
 //!
@@ -195,7 +193,7 @@ DAC_setReferenceVoltage(uint32_t base, DAC_ReferenceVoltage source)
     ASSERT(DAC_isBaseValid(base));
 
     //
-    // Set the reference voltage
+    // Set the reference  voltage
     //
     EALLOW;
 
@@ -257,13 +255,13 @@ DAC_setLoadMode(uint32_t base, DAC_LoadMode mode)
 //
 //*****************************************************************************
 static inline void
-DAC_setPWMSyncSignal(uint32_t base, uint16_t pwmSignal)
+DAC_setPWMSyncSignal(uint32_t base, uint16_t signal)
 {
     //
     // Check the arguments.
     //
     ASSERT(DAC_isBaseValid(base));
-    ASSERT((pwmSignal > 0U) && (pwmSignal < 17U));
+    ASSERT((signal > 0U) && (signal < 17U));
 
     //
     // Set the PWM sync signal
@@ -272,8 +270,7 @@ DAC_setPWMSyncSignal(uint32_t base, uint16_t pwmSignal)
 
     HWREGH(base + DAC_O_CTL) = (HWREGH(base + DAC_O_CTL) &
                                 ~DAC_CTL_SYNCSEL_M) |
-                               ((uint16_t)(pwmSignal - 1U) <<
-                                DAC_CTL_SYNCSEL_S);
+                               ((uint16_t)(signal - 1U) << DAC_CTL_SYNCSEL_S);
 
     EDIS;
 }
@@ -520,7 +517,7 @@ DAC_lockRegister(uint32_t base, uint16_t reg)
     //
     EALLOW;
 
-    HWREGH(base + DAC_O_LOCK) |= (DAC_LOCK_KEY | reg);
+    HWREGH(base + DAC_O_LOCK) |= reg;
 
     EDIS;
 }

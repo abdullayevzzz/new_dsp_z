@@ -5,10 +5,8 @@
 // TITLE:  C28x EMIF driver.
 //
 //###########################################################################
-// 
-// C2000Ware v6.00.00.00
-//
-// Copyright (C) 2024 Texas Instruments Incorporated - http://www.ti.com
+// $Copyright:
+// Copyright (C) 2022 Texas Instruments Incorporated - http://www.ti.com
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions 
@@ -1321,7 +1319,6 @@ EMIF_getSyncTotalAccesses(uint32_t base)
     // Gets total accesses to sync memory.
     //
     return(HWREG(base + EMIF_O_TOTAL_SDRAM_AR));
-
 }
 
 //*****************************************************************************

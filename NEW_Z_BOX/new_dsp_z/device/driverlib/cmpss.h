@@ -5,10 +5,8 @@
 // TITLE:  C28x CMPSS driver.
 //
 //###########################################################################
-// 
-// C2000Ware v6.00.00.00
-//
-// Copyright (C) 2024 Texas Instruments Incorporated - http://www.ti.com
+// $Copyright:
+// Copyright (C) 2022 Texas Instruments Incorporated - http://www.ti.com
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions 
@@ -84,8 +82,6 @@ extern "C"
                              CMPSS_COMPCTL_ASYNCLEN)
 
 #ifndef DOXYGEN_PDF_IGNORE
-
-
 //*****************************************************************************
 //
 // Values that can be passed to CMPSS_configLowComparator() and
@@ -200,7 +196,6 @@ extern "C"
 #define CMPSS_PWMSYNC10  10U //!< PWMSYNC10
 #define CMPSS_PWMSYNC11  11U //!< PWMSYNC11
 #define CMPSS_PWMSYNC12  12U //!< PWMSYNC12
-
 
 
 //*****************************************************************************
@@ -568,6 +563,7 @@ CMPSS_configDAC(uint32_t base, uint16_t config)
                     (HWREGH(base + CMPSS_O_COMPDACCTL) &
                      ~(CMPSS_COMPDACCTL_SWLOADSEL | CMPSS_COMPDACCTL_SELREF |
                        CMPSS_COMPDACCTL_DACSOURCE)) | config;
+
     EDIS;
 }
 
@@ -964,45 +960,6 @@ CMPSS_getRampDelayValue(uint32_t base)
     // Read the ramp delay value from the register.
     //
     return(HWREGH(base + CMPSS_O_RAMPDLYA));
-}
-
-//*****************************************************************************
-//
-//! Configures sync source for comparator
-//!
-//! \param base is the base address of the comparator module.
-//! \param syncSource is the desired EPWMxSYNCPER source
-//!
-//! This function configures desired EPWMxSYNCPER source for comparator
-//! blocks. Configured EPWMxSYNCPER signal can be used to synchronize loading
-//! of DAC input value from shadow to active register. It can also be used to
-//! synchronize Ramp generator, if applicable. Refer to device manual to check
-//! if Ramp generator is available in the desired CMPSS instance.
-//!
-//! Valid values for \e syncSource parameter can be 1 to n, where n represents
-//! the maximum number of EPWMSYNCPER signals available on the device. For
-//! instance, passing 2 into \e syncSource will select EPWM2SYNCPER.
-//!
-//! \return None.
-//
-//*****************************************************************************
-static inline void
-CMPSS_configureSyncSource(uint32_t base, uint16_t syncSource)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(CMPSS_isBaseValid(base));
-
-    //
-    // Write the ramp delay value to the shadow register.
-    //
-    EALLOW;
-    HWREGH(base + CMPSS_O_COMPDACCTL) = (HWREGH(base + CMPSS_O_COMPDACCTL) &
-                                          ~CMPSS_COMPDACCTL_RAMPSOURCE_M)   |
-                                         ((uint16_t)(syncSource - 1U)       <<
-                                          CMPSS_COMPDACCTL_RAMPSOURCE_S);
-    EDIS;
 }
 
 //*****************************************************************************

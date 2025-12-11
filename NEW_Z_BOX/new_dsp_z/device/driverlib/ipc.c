@@ -5,10 +5,8 @@
 // TITLE:  C28x IPC driver.
 //
 //###########################################################################
-// 
-// C2000Ware v6.00.00.00
-//
-// Copyright (C) 2024 Texas Instruments Incorporated - http://www.ti.com
+// $Copyright:
+// Copyright (C) 2022 Texas Instruments Incorporated - http://www.ti.com
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions 
@@ -336,7 +334,7 @@ bool IPC_sendMessageToQueue(IPC_Type_t ipcType,
 
     uint16_t writeIndex;
     uint16_t readIndex;
-    bool ret = true;
+    uint16_t ret = true;
 
     writeIndex = *(msgQueue->PutWriteIndex);
     readIndex  = *(msgQueue->PutReadIndex);
@@ -399,7 +397,7 @@ bool IPC_readMessageFromQueue(IPC_Type_t ipcType,
 
     uint16_t writeIndex;
     uint16_t readIndex;
-    bool ret = true;
+    uint16_t ret = true;
 
     writeIndex = *(msgQueue->GetWriteIndex);
     readIndex  = *(msgQueue->GetReadIndex);

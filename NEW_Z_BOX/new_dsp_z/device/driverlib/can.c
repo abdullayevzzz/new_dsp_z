@@ -5,10 +5,8 @@
 // TITLE:  C28x CAN driver.
 //
 //###########################################################################
-// 
-// C2000Ware v6.00.00.00
-//
-// Copyright (C) 2024 Texas Instruments Incorporated - http://www.ti.com
+// $Copyright:
+// Copyright (C) 2022 Texas Instruments Incorporated - http://www.ti.com
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions 
@@ -832,7 +830,7 @@ CAN_sendRemoteRequestMessage(uint32_t base, uint32_t objID)
     // Transfer the message object to the message object specified by
     // objID.
     //
-    HWREG_BP(base + CAN_O_IF1CMD) = ((uint32_t)CAN_IF1CMD_DIR |
+    HWREG_BP(base + CAN_O_IF1CMD) = (msgCtrl | (uint32_t)CAN_IF1CMD_DIR |
                                      (uint32_t)CAN_IF1CMD_TXRQST |
                                      (objID & CAN_IF1CMD_MSG_NUM_M));
 }

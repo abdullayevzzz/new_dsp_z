@@ -5,10 +5,8 @@
 // TITLE:  C28x DAC driver.
 //
 //###########################################################################
-// 
-// C2000Ware v6.00.00.00
-//
-// Copyright (C) 2024 Texas Instruments Incorporated - http://www.ti.com
+// $Copyright:
+// Copyright (C) 2022 Texas Instruments Incorporated - http://www.ti.com
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions 
@@ -58,7 +56,7 @@ DAC_tuneOffsetTrim(uint32_t base, float32_t referenceVoltage)
     // Check the arguments.
     //
     ASSERT(DAC_isBaseValid(base));
-    ASSERT(referenceVoltage > 0.0F);
+    ASSERT(referenceVoltage > 0U);
 
     //
     // Get the sign-extended offset trim value

@@ -5,10 +5,8 @@
 // TITLE:  C28x Flash driver.
 //
 //###########################################################################
-// 
-// C2000Ware v6.00.00.00
-//
-// Copyright (C) 2024 Texas Instruments Incorporated - http://www.ti.com
+// $Copyright:
+// Copyright (C) 2022 Texas Instruments Incorporated - http://www.ti.com
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions 
@@ -53,7 +51,6 @@
 extern "C"
 {
 #endif
-#ifndef __TMS320C28XX_CLA__
 
 //*****************************************************************************
 //
@@ -1617,7 +1614,6 @@ Flash_releasePumpSemaphore(uint32_t pumpSemBase)
 extern void
 Flash_initModule(uint32_t ctrlBase, uint32_t eccBase, uint16_t waitstates);
 
-
 //*****************************************************************************
 //
 //! Powers down the flash.
@@ -1657,7 +1653,6 @@ Flash_wakeFromLPM(uint32_t ctrlBase);
 //! @}
 //
 //*****************************************************************************
-#endif  // #ifdef __TMS320C28XX_CLA__
 
 //*****************************************************************************
 //
