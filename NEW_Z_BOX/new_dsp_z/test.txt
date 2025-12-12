@@ -1,1 +1,1 @@
-t
+DSP-based impedance measurement device for the Texas Instruments platform that measures impedance accurately.
