@@ -93,6 +93,9 @@ void main(void)
     EINT;
     ERTM;
 
+
+    struct SER_DATA_T  ser_data;
+
 }
 
 //
