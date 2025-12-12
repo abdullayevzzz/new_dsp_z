@@ -126,4 +126,6 @@ GEN_OPTS__QUOTED :=
 SUBDIRS := \
 . \
 device \
+drivers \
+services \
 

@@ -13,6 +13,9 @@ ORDERED_OBJS += \
 "./main.obj" \
 "./device/F2837xD_CodeStartBranch.obj" \
 "./device/device.obj" \
+"./drivers/adc_driver.obj" \
+"./drivers/shift_register.obj" \
+"./services/measurement_engine.obj" \
 "../2837xD_RAM_lnk_cpu1.cmd" \
 "C:/ti/c2000/C2000Ware_5_00_00_00/driverlib/f2837xd/driverlib/ccs/Debug/driverlib.lib" \
 $(GEN_CMDS__FLAG) \
@@ -27,8 +30,12 @@ RMDIR := RMDIR /S/Q
 -include sources.mk
 -include subdir_vars.mk
 -include device/subdir_vars.mk
+-include drivers/subdir_vars.mk
+-include services/subdir_vars.mk
 -include subdir_rules.mk
 -include device/subdir_rules.mk
+-include drivers/subdir_rules.mk
+-include services/subdir_rules.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -146,8 +153,8 @@ new_dsp_z.out: $(OBJS) $(CMD_SRCS) $(LIB_SRCS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)
-	-$(RM) "main.obj" "device\F2837xD_CodeStartBranch.obj" "device\device.obj" 
-	-$(RM) "main.d" "device\device.d" 
+	-$(RM) "main.obj" "device\F2837xD_CodeStartBranch.obj" "device\device.obj" "drivers\adc_driver.obj" "drivers\shift_register.obj" "services\measurement_engine.obj" 
+	-$(RM) "main.d" "device\device.d" "drivers\adc_driver.d" "drivers\shift_register.d" "services\measurement_engine.d" 
 	-$(RM) "device\F2837xD_CodeStartBranch.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
