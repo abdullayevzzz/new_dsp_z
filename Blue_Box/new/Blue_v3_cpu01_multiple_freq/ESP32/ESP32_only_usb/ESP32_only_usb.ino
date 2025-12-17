@@ -1,0 +1,53 @@
+//#include "BluetoothSerial.h"
+
+#define packet_length 1
+#define RX_PIN 16  // Example RX pin
+#define TX_PIN 17  // TX pin
+
+/*
+// Check if BluetoothSerial library is compiled in
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+#error Bluetooth is not enabled! Make sure to run `make menuconfig` to and enable it
+#endif
+*/
+
+//BluetoothSerial SerialBT;
+
+void setup() {
+  // Serial.begin(460800, SERIAL_8N1); // Start debugging serial communication at 115200 baud rate
+  Serial1.begin(460800, SERIAL_8N1, RX_PIN, TX_PIN); // Setup for UART communication
+  //SerialBT.begin("ESP32_BB_4"); // Start Bluetooth with the name
+  Serial.begin(460800);
+  delay(2000); // Optional: give some time to connect
+}
+
+void loop() {
+  static uint8_t packet[packet_length];
+  static int index = 0;
+  static bool isCollecting = false;
+  static bool isAuthentificated = false;
+  static uint8_t byte_from_dsp;
+  static uint8_t byte_from_pc;
+
+  while (Serial1.available()) {
+    byte_from_dsp = Serial1.read();
+    // Serial.write(byte_from_dsp);
+
+    packet[index++] = byte_from_dsp;
+
+    // Check if packet is complete
+    if (index == packet_length) {
+      // Send the complete packet over Bluetooth
+      //SerialBT.write(packet, sizeof(packet));
+      Serial.write(packet, sizeof(packet));
+      // Reset for the next packet
+      index = 0;
+      // isCollecting = false;
+    }
+  }
+
+  while (Serial.available()) {
+    byte_from_pc = Serial.read();
+    Serial1.write(byte_from_pc);
+  }
+}
