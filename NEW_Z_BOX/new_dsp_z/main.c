@@ -94,8 +94,10 @@ void main(void)
     ERTM;
 
 
-    struct SER_DATA_T  ser_data;
+    struct SER_DATA_T  ser_data; // for testing
 
+    init_ADC();
+    init_PWM();  // This PWM triggers ADC
 }
 
 //

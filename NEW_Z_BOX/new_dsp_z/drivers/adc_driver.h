@@ -8,6 +8,8 @@
 #ifndef DRIVERS_ADC_DRIVER_H_
 #define DRIVERS_ADC_DRIVER_H_
 
+void configureADC(uint32_t adcBase);
+void initADCSOC(void);
 
 
 

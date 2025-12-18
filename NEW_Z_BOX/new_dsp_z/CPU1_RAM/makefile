@@ -14,6 +14,7 @@ ORDERED_OBJS += \
 "./device/F2837xD_CodeStartBranch.obj" \
 "./device/device.obj" \
 "./drivers/adc_driver.obj" \
+"./drivers/pwm_driver.obj" \
 "./drivers/shift_register.obj" \
 "./services/measurement_engine.obj" \
 "../2837xD_RAM_lnk_cpu1.cmd" \
@@ -153,8 +154,8 @@ new_dsp_z.out: $(OBJS) $(CMD_SRCS) $(LIB_SRCS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)
-	-$(RM) "main.obj" "device\F2837xD_CodeStartBranch.obj" "device\device.obj" "drivers\adc_driver.obj" "drivers\shift_register.obj" "services\measurement_engine.obj" 
-	-$(RM) "main.d" "device\device.d" "drivers\adc_driver.d" "drivers\shift_register.d" "services\measurement_engine.d" 
+	-$(RM) "main.obj" "device\F2837xD_CodeStartBranch.obj" "device\device.obj" "drivers\adc_driver.obj" "drivers\pwm_driver.obj" "drivers\shift_register.obj" "services\measurement_engine.obj" 
+	-$(RM) "main.d" "device\device.d" "drivers\adc_driver.d" "drivers\pwm_driver.d" "drivers\shift_register.d" "services\measurement_engine.d" 
 	-$(RM) "device\F2837xD_CodeStartBranch.d" 
 	-@echo 'Finished clean'
 	-@echo ' '

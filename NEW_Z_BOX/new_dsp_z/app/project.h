@@ -8,7 +8,8 @@
 #ifndef APP_PROJECT_H_
 #define APP_PROJECT_H_
 
-
+#include "driverlib.h"
+#include "device.h"
 #include "global_definitions.h"
 #include <stdio.h>
 

@@ -88,6 +88,7 @@ main.obj: C:/ti/c2000/C2000Ware_5_00_00_00/driverlib/f2837xd/driverlib/version.h
 main.obj: C:/ti/c2000/C2000Ware_5_00_00_00/driverlib/f2837xd/driverlib/driver_inclusive_terminology_mapping.h
 main.obj: C:/Users/admin/workspace_v12/new_dsp_z/device/device.h
 main.obj: C:/Users/admin/workspace_v12/new_dsp_z/app/project.h
+main.obj: C:/Users/admin/workspace_v12/new_dsp_z/device/device.h
 main.obj: C:/Users/admin/workspace_v12/new_dsp_z/app/global_definitions.h
 main.obj: C:/ti/ccs1210/ccs/tools/compiler/ti-cgt-c2000_22.6.0.LTS/include/stdio.h
 main.obj: C:/ti/ccs1210/ccs/tools/compiler/ti-cgt-c2000_22.6.0.LTS/include/stdarg.h
@@ -267,6 +268,8 @@ C:/ti/c2000/C2000Ware_5_00_00_00/driverlib/f2837xd/driverlib/driver_inclusive_te
 C:/Users/admin/workspace_v12/new_dsp_z/device/device.h:
 
 C:/Users/admin/workspace_v12/new_dsp_z/app/project.h:
+
+C:/Users/admin/workspace_v12/new_dsp_z/device/device.h:
 
 C:/Users/admin/workspace_v12/new_dsp_z/app/global_definitions.h:
 

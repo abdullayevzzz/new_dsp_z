@@ -2,6 +2,7 @@
 "./device/F2837xD_CodeStartBranch.obj"
 "./device/device.obj"
 "./drivers/adc_driver.obj"
+"./drivers/pwm_driver.obj"
 "./drivers/shift_register.obj"
 "./services/measurement_engine.obj"
 "../2837xD_RAM_lnk_cpu1.cmd"
